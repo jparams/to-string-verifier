@@ -1,0 +1,32 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'org.gradle.api.plugins:gradle-nexus-plugin:0.6.1'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'nexus'
+apply plugin: 'maven'
+
+apply from: 'publish.gradle'
+
+group = 'com.jparams'
+version = '1.0.1'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile 'com.jparams:object-builder:1.0.6'
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.assertj:assertj-core:2.6.0'
+    testCompile 'eu.codearte.catch-exception:catch-exception:1.4.4'
+    testCompile 'org.mockito:mockito-core:1.10.19'
+}
