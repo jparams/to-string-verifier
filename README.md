@@ -1,6 +1,6 @@
 # To String Tester
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.jparams/object-builder/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.jparams/to-string-tester) [![Build Status](https://travis-ci.org/jparams/object-builder.svg?branch=master)](https://travis-ci.org/jparams/to-string-tester) [![Javadocs](http://www.javadoc.io/badge/com.jparams/to-string-tester.svg)](http://www.javadoc.io/doc/com.jparams/to-string-tester)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.jparams/to-string-tester/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.jparams/to-string-tester) [![Build Status](https://travis-ci.org/jparams/to-string-tester.svg?branch=master)](https://travis-ci.org/jparams/to-string-tester) [![Javadocs](http://www.javadoc.io/badge/com.jparams/to-string-tester.svg)](http://www.javadoc.io/doc/com.jparams/to-string-tester)
 
 ## Getting Started
 
