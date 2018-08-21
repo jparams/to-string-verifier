@@ -2,9 +2,9 @@ apply plugin: 'nexus'
 
 modifyPom {
     project {
-        name 'object-builder'
-        description 'Object Builder'
-        url 'https://github.com/jparams/object-builder'
+        name 'to-string-tester'
+        description 'To String Tester'
+        url 'https://github.com/jparams/to-string-tester'
         packaging 'jar'
         organization {
             name 'JParams'
@@ -18,21 +18,15 @@ modifyPom {
             }
         }
         scm {
-            url 'https://github.com/jparams/object-builder'
-            connection 'scm:git:https://github.com/jparams/object-builder.git'
-            developerConnection 'scm:git@github.com:jparams/object-builder.git'
+            url 'https://github.com/jparams/to-string-tester'
+            connection 'scm:git:https://github.com/jparams/to-string-tester.git'
+            developerConnection 'scm:git@github.com:jparams/to-string-tester.git'
         }
         developers {
             developer {
                 id 'syed'
                 name 'Syed Belal Jafri'
             }
-        }
-        // We need to remove the SWT dependency. SWT is platform specific and not available in Maven Central.
-        // For this reason, we don't include it in the POM. If you need to grab SWT for your project, and you're
-        // using Gradle, check out how we get it from the Google Code repo in our build.gradle.
-        dependencies {
-
         }
     }
 }
