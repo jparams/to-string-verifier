@@ -5,7 +5,7 @@ package com.jparams.tester;
  */
 public class InternalErrorException extends RuntimeException
 {
-    public InternalErrorException(final String message, final Throwable cause)
+    InternalErrorException(final String message, final Throwable cause)
     {
         super(message, cause);
     }

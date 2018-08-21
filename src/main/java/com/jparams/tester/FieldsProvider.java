@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * Provides all fields for a given class
  */
-public final class FieldsProvider
+final class FieldsProvider
 {
     private FieldsProvider()
     {
@@ -21,7 +21,7 @@ public final class FieldsProvider
      * @param inheritedFields include/ exclude inherited fields
      * @return fields
      */
-    public static List<Field> provide(final Class<?> clazz, final boolean inheritedFields)
+    static List<Field> provide(final Class<?> clazz, final boolean inheritedFields)
     {
         final List<Field> fields = new ArrayList<>();
 
