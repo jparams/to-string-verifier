@@ -1,10 +1,10 @@
-# To String Tester
+# To String Verifier
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.jparams/to-string-verifier/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.jparams/to-string-verifier) [![Build Status](https://travis-ci.org/jparams/to-string-verifier.svg?branch=master)](https://travis-ci.org/jparams/to-string-verifier) [![Javadocs](http://www.javadoc.io/badge/com.jparams/to-string-verifier.svg)](http://www.javadoc.io/doc/com.jparams/to-string-verifier)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.jparams/to-string-verifier/badge.svg)](https://search.maven.org/search?q=g:com.jparams%20AND%20a:to-string-verifier) [![Build Status](https://travis-ci.org/jparams/to-string-verifier.svg?branch=master)](https://travis-ci.org/jparams/to-string-verifier) [![Javadocs](http://www.javadoc.io/badge/com.jparams/to-string-verifier.svg)](http://www.javadoc.io/doc/com.jparams/to-string-verifier)
 
 ## Getting Started
 
-### Get To String Tester
+### Get To String Verifier
 
 Maven:
 ```
@@ -20,8 +20,8 @@ Gradle:
 compile 'com.jparams:to-string-verifier:1.x.x'
 ```
 
-### What is To String Tester?
-To String Tester is the easiest, most convenient way to test the toString method on your class. toString methods are incredibly important for logging and debugging purposes, yet when it comes to testing, it is often forgotten or ignored. It is very easy to add a new field to your class and forget to update the toString method. Without tests in place, you won’t know something is missing until you are sitting looking through logs or debugging your application and by that time its already too late.
+### What is To String Verifier?
+To String Verifier is the easiest, most convenient way to test the toString method on your class. toString methods are incredibly important for logging and debugging purposes, yet when it comes to testing, it is often forgotten or ignored. It is very easy to add a new field to your class and forget to update the toString method. Without tests in place, you won’t know something is missing until you are sitting looking through logs or debugging your application and by that time its already too late.
 
 
 ### Write a Test
@@ -50,7 +50,7 @@ public void testToString()
 }
 ```
 
-To String Tester is incredibly configurable, so take a look at the Java Docs for more options.
+To String Verifier is incredibly configurable, so take a look at the Java Docs for more options.
 
 ## Compatibility
 This library is compatible with Java 8 and above.

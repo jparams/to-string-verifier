@@ -3,7 +3,7 @@ apply plugin: 'nexus'
 modifyPom {
     project {
         name 'to-string-verifier'
-        description 'To String Tester'
+        description 'To String Verifier'
         url 'https://github.com/jparams/to-string-verifier'
         packaging 'jar'
         organization {
