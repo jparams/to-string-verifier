@@ -1,27 +1,30 @@
-package com.jparams.tester;
+package com.jparams.verifier.tostring;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
- * {@link ToStringTester} can be used in unit tests to verify that the {@link Object#toString()} returns
+ * {@link ToStringVerifier} can be used in unit tests to verify that the {@link Object#toString()} returns
  * the desired results.
  *
  * <p>
- * To get started, use {@code ToStringTester} as follows:
+ * To get started, use {@code ToStringVerifier} as follows:
  * <p>
- * {@code ToStringTester.forClass(MyClass.class).verify();}
+ * {@code ToStringVerifier.forClass(MyClass.class).verify();}
  * <p>
  *
  * @param <T> class under test
  */
-public final class ToStringTester<T>
+public final class ToStringVerifier<T>
 {
+    private static final int FIELD_TEST_REPEAT_COUNT = 5;
     private static final Predicate<Field> MATCH_ALL_PREDICATE = (item) -> true;
 
     private final SubjectBuilder<T> subjectBuilder;
@@ -32,22 +35,22 @@ public final class ToStringTester<T>
     private boolean hashCode = false;
     private String fieldValuePattern = "%s(.{0,4}?)%s";
 
-    private ToStringTester(final Class<T> clazz)
+    private ToStringVerifier(final Class<T> clazz)
     {
         this.subjectBuilder = new SubjectBuilder<>(clazz);
         this.clazz = clazz;
     }
 
     /**
-     * Create a tester for the given class
+     * Create a verifier for the given class
      *
      * @param clazz class to test
      * @param <T>   class type
      * @return tester
      */
-    public static <T> ToStringTester<T> forClass(final Class<T> clazz)
+    public static <T> ToStringVerifier<T> forClass(final Class<T> clazz)
     {
-        return new ToStringTester<>(clazz);
+        return new ToStringVerifier<>(clazz);
     }
 
     /**
@@ -72,7 +75,7 @@ public final class ToStringTester<T>
      * @param fieldValuePattern field value pattern
      * @return this
      */
-    public ToStringTester<T> withFieldValuePattern(final String fieldValuePattern)
+    public ToStringVerifier<T> withFieldValuePattern(final String fieldValuePattern)
     {
         if (fieldValuePattern == null)
         {
@@ -95,7 +98,7 @@ public final class ToStringTester<T>
      * @param nameStyle style of the class name
      * @return this
      */
-    public ToStringTester<T> withClassName(final NameStyle nameStyle)
+    public ToStringVerifier<T> withClassName(final NameStyle nameStyle)
     {
         this.nameStyle = nameStyle;
         return this;
@@ -108,7 +111,7 @@ public final class ToStringTester<T>
      * @param hashCode check for inclusion of the hash code
      * @return this
      */
-    public ToStringTester<T> withHashCode(final boolean hashCode)
+    public ToStringVerifier<T> withHashCode(final boolean hashCode)
     {
         this.hashCode = hashCode;
         return this;
@@ -120,7 +123,7 @@ public final class ToStringTester<T>
      * @param inheritedFields true to test for fields inherited from the parent class
      * @return this
      */
-    public ToStringTester<T> withInheritedFields(final boolean inheritedFields)
+    public ToStringVerifier<T> withInheritedFields(final boolean inheritedFields)
     {
         this.inheritedFields = inheritedFields;
         return this;
@@ -133,7 +136,7 @@ public final class ToStringTester<T>
      * @param fields field names to include in test
      * @return this
      */
-    public ToStringTester<T> withOnlyTheseFields(final String... fields)
+    public ToStringVerifier<T> withOnlyTheseFields(final String... fields)
     {
         final Set<String> fieldNamesSet = new HashSet<>(Arrays.asList(fields));
         return withOnlyTheseFields(fieldNamesSet);
@@ -146,7 +149,7 @@ public final class ToStringTester<T>
      * @param fields field names to include in test
      * @return this
      */
-    public ToStringTester<T> withOnlyTheseFields(final Collection<String> fields)
+    public ToStringVerifier<T> withOnlyTheseFields(final Collection<String> fields)
     {
         if (fields == null)
         {
@@ -165,7 +168,7 @@ public final class ToStringTester<T>
      * @param fields field names to exclude in test
      * @return this
      */
-    public ToStringTester<T> withIgnoredFields(final String... fields)
+    public ToStringVerifier<T> withIgnoredFields(final String... fields)
     {
         return withIgnoredFields(new HashSet<>(Arrays.asList(fields)));
     }
@@ -177,7 +180,7 @@ public final class ToStringTester<T>
      * @param fields field names to exclude in test
      * @return this
      */
-    public ToStringTester<T> withIgnoredFields(final Collection<String> fields)
+    public ToStringVerifier<T> withIgnoredFields(final Collection<String> fields)
     {
         if (fields == null)
         {
@@ -195,7 +198,7 @@ public final class ToStringTester<T>
      * @param regex field name match regex
      * @return this
      */
-    public ToStringTester<T> withMatchingFields(final String regex)
+    public ToStringVerifier<T> withMatchingFields(final String regex)
     {
         this.checkFieldPredicate();
         this.fieldPredicate = (field) -> field.getName().matches(regex);
@@ -203,14 +206,14 @@ public final class ToStringTester<T>
     }
 
     /**
-     * Adds prefabricated values for instance fields of classes that ToStringTester cannot instantiate by itself.
+     * Adds prefabricated values for instance fields of classes that ToStringVerifier cannot instantiate by itself.
      *
      * @param type        The class of the prefabricated values
      * @param prefabValue An instance of {@code S}.
      * @param <S>         The class of the prefabricated values.
      * @return this
      */
-    public <S> ToStringTester<T> withPrefabValue(final Class<S> type, final S prefabValue)
+    public <S> ToStringVerifier<T> withPrefabValue(final Class<S> type, final S prefabValue)
     {
         this.subjectBuilder.setPrefabValue(type, prefabValue);
         return this;
@@ -246,17 +249,14 @@ public final class ToStringTester<T>
             verifyHashCode(toString, subject.hashCode());
         }
 
-        FieldsProvider.provide(clazz, inheritedFields)
-                      .stream()
-                      .filter(fieldPredicate == null ? MATCH_ALL_PREDICATE : fieldPredicate)
-                      .forEach(this::verifyField);
+        verifyFields(FIELD_TEST_REPEAT_COUNT);
     }
 
     private void verifyClassName(final String string, final String className)
     {
         if (!string.startsWith(className))
         {
-            assertFailed(string, "start with class name", className);
+            verificationFailed(string, "start with class name", className);
         }
     }
 
@@ -266,15 +266,30 @@ public final class ToStringTester<T>
 
         if (!string.contains(stringHashCode))
         {
-            assertFailed(string, "contain hash code", hashCode);
+            verificationFailed(string, "contain hash code", hashCode);
         }
     }
 
-    private void verifyField(final Field field)
+    private void verifyFields(final int repeatCount)
+    {
+        final List<Field> fields = FieldsProvider.provide(clazz, inheritedFields)
+                                                 .stream()
+                                                 .filter(fieldPredicate == null ? MATCH_ALL_PREDICATE : fieldPredicate)
+                                                 .collect(Collectors.toList());
+
+        // Run field verification multiple times as tests rely on randomly generated values. This will ensure tests
+        // pass consistently
+        for (int i = 0; i < repeatCount; i++)
+        {
+            final T subject = subjectBuilder.build();
+            fields.forEach(field -> verifyField(field, subject));
+        }
+    }
+
+    private void verifyField(final Field field, final T subject)
     {
         try
         {
-            final T subject = subjectBuilder.build();
             final String fieldValue = String.valueOf(field.get(subject));
             final String stringValue = subject.toString();
 
@@ -283,7 +298,7 @@ public final class ToStringTester<T>
 
             if (!pattern.matcher(stringValue).matches())
             {
-                assertFailed(stringValue, "contain field", field.getName() + "\n\nwith value:\n" + fieldValue);
+                verificationFailed(stringValue, "contain field", field.getName() + "\n\nwith value:\n" + fieldValue);
             }
         }
         catch (final IllegalAccessException e)
@@ -292,7 +307,7 @@ public final class ToStringTester<T>
         }
     }
 
-    private void assertFailed(final String string, final String field, final Object expectedValue)
+    private void verificationFailed(final String string, final String field, final Object expectedValue)
     {
         final String message = String.format("\n\nExpected toString:\n%s\n\nto %s:\n%s", string, field, expectedValue);
         throw new AssertionError(message);

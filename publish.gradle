@@ -2,9 +2,9 @@ apply plugin: 'nexus'
 
 modifyPom {
     project {
-        name 'to-string-tester'
+        name 'to-string-verifier'
         description 'To String Tester'
-        url 'https://github.com/jparams/to-string-tester'
+        url 'https://github.com/jparams/to-string-verifier'
         packaging 'jar'
         organization {
             name 'JParams'
@@ -18,9 +18,9 @@ modifyPom {
             }
         }
         scm {
-            url 'https://github.com/jparams/to-string-tester'
-            connection 'scm:git:https://github.com/jparams/to-string-tester.git'
-            developerConnection 'scm:git@github.com:jparams/to-string-tester.git'
+            url 'https://github.com/jparams/to-string-verifier'
+            connection 'scm:git:https://github.com/jparams/to-string-verifier.git'
+            developerConnection 'scm:git@github.com:jparams/to-string-verifier.git'
         }
         developers {
             developer {

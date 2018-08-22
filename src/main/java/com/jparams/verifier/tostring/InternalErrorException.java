@@ -1,9 +1,9 @@
-package com.jparams.tester;
+package com.jparams.verifier.tostring;
 
 /**
  * Thrown on internal error
  */
-public class InternalErrorException extends RuntimeException
+class InternalErrorException extends RuntimeException
 {
     InternalErrorException(final String message, final Throwable cause)
     {

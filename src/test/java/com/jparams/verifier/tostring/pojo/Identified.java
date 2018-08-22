@@ -1,4 +1,4 @@
-package com.jparams.tester.pojo;
+package com.jparams.verifier.tostring.pojo;
 
 public class Identified
 {

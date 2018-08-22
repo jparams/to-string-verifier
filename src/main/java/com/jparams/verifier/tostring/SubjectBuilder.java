@@ -1,4 +1,4 @@
-package com.jparams.tester;
+package com.jparams.verifier.tostring;
 
 import com.jparams.object.builder.Build;
 import com.jparams.object.builder.Configuration;

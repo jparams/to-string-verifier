@@ -1,11 +1,11 @@
-package com.jparams.tester;
+package com.jparams.verifier.tostring;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.jparams.tester.pojo.Person;
+import com.jparams.verifier.tostring.pojo.Person;
 
 import org.junit.After;
 import org.junit.Before;
@@ -13,11 +13,11 @@ import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public class ToStringTesterTest
+public class ToStringVerifierTest
 {
     private static final Lock lock = new ReentrantLock();
 
-    private ToStringTester<Person> subject;
+    private ToStringVerifier<Person> subject;
 
     @Before
     public void setUp()
@@ -25,7 +25,7 @@ public class ToStringTesterTest
         lock.lock(); // to force only one test to run at a time
 
         Person.setStringValue(null);
-        subject = ToStringTester.forClass(Person.class);
+        subject = ToStringVerifier.forClass(Person.class);
     }
 
     @After
@@ -37,7 +37,7 @@ public class ToStringTesterTest
     @Test(expected = IllegalArgumentException.class)
     public void testWithNullClass()
     {
-        ToStringTester.forClass(null).verify();
+        ToStringVerifier.forClass(null).verify();
     }
 
     @Test
@@ -47,13 +47,13 @@ public class ToStringTesterTest
 
         assertThatThrownBy(() -> subject.withOnlyTheseFields(Collections.emptyList()).withClassName(NameStyle.NAME).verify())
             .isInstanceOf(AssertionError.class)
-            .hasMessage("\n\nExpected toString:\nPerson\n\nto start with class name:\ncom.jparams.tester.pojo.Person");
+            .hasMessage("\n\nExpected toString:\nPerson\n\nto start with class name:\ncom.jparams.verifier.tostring.pojo.Person");
     }
 
     @Test
     public void testSuccessWithClassNameStyleName()
     {
-        Person.setStringValue("com.jparams.tester.pojo.Person");
+        Person.setStringValue("com.jparams.verifier.tostring.pojo.Person");
 
         subject.withOnlyTheseFields(Collections.emptyList()).withClassName(NameStyle.NAME).verify();
     }
@@ -61,11 +61,11 @@ public class ToStringTesterTest
     @Test
     public void testFailureWithClassNameStyleSimpleName()
     {
-        Person.setStringValue("com.jparams.tester.pojo.Person");
+        Person.setStringValue("com.jparams.verifier.tostring.pojo.Person");
 
         assertThatThrownBy(() -> subject.withOnlyTheseFields(Collections.emptyList()).withClassName(NameStyle.SIMPLE_NAME).verify())
             .isInstanceOf(AssertionError.class)
-            .hasMessage("\n\nExpected toString:\ncom.jparams.tester.pojo.Person\n\nto start with class name:\nPerson");
+            .hasMessage("\n\nExpected toString:\ncom.jparams.verifier.tostring.pojo.Person\n\nto start with class name:\nPerson");
     }
 
     @Test
@@ -207,9 +207,9 @@ public class ToStringTesterTest
     @Test
     public void testToString()
     {
-        ToStringTester.forClass(Person.class)
-                      .withClassName(NameStyle.SIMPLE_NAME)
-                      .withIgnoredFields("password")
-                      .verify();
+        ToStringVerifier.forClass(Person.class)
+                        .withClassName(NameStyle.SIMPLE_NAME)
+                        .withIgnoredFields("password")
+                        .verify();
     }
 }

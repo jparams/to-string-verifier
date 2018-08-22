@@ -1,4 +1,4 @@
-package com.jparams.tester;
+package com.jparams.verifier.tostring;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

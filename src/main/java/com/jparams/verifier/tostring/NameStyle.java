@@ -1,4 +1,4 @@
-package com.jparams.tester;
+package com.jparams.verifier.tostring;
 
 /**
  * Style of the class name

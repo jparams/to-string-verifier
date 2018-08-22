@@ -1,6 +1,6 @@
 # To String Tester
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.jparams/to-string-tester/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.jparams/to-string-tester) [![Build Status](https://travis-ci.org/jparams/to-string-tester.svg?branch=master)](https://travis-ci.org/jparams/to-string-tester) [![Javadocs](http://www.javadoc.io/badge/com.jparams/to-string-tester.svg)](http://www.javadoc.io/doc/com.jparams/to-string-tester)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.jparams/to-string-verifier/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.jparams/to-string-verifier) [![Build Status](https://travis-ci.org/jparams/to-string-verifier.svg?branch=master)](https://travis-ci.org/jparams/to-string-verifier) [![Javadocs](http://www.javadoc.io/badge/com.jparams/to-string-verifier.svg)](http://www.javadoc.io/doc/com.jparams/to-string-verifier)
 
 ## Getting Started
 
@@ -10,14 +10,14 @@ Maven:
 ```
 <dependency>
     <groupId>com.jparams</groupId>
-    <artifactId>to-string-tester</artifactId>
+    <artifactId>to-string-verifier</artifactId>
     <version>1.x.x</version>
 </dependency>
 ```
 
 Gradle:
 ```
-compile 'com.jparams:to-string-tester:1.x.x'
+compile 'com.jparams:to-string-verifier:1.x.x'
 ```
 
 ### What is To String Tester?
@@ -31,7 +31,7 @@ Writing a test is easy! In most cases you want to ensure that your toString meth
 @Test
 public void testToString()
 {
-    ToStringTester.forClass(User.class)
+    ToStringVerifier.forClass(User.class)
                   .withClassName(NameStyle.SIMPLE_NAME)
                   .verify();
 }
@@ -43,7 +43,7 @@ Oh! A user object. I would not want to include the password in the toString, how
 @Test
 public void testToString()
 {
-    ToStringTester.forClass(Person.class)
+    ToStringVerifier.forClass(Person.class)
                   .withClassName(NameStyle.SIMPLE_NAME)
                   .withIgnoredFields("password")
                   .verify();

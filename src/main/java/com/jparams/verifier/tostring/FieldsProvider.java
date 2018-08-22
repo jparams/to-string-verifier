@@ -1,4 +1,4 @@
-package com.jparams.tester;
+package com.jparams.verifier.tostring;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
