@@ -258,7 +258,7 @@ public class ToStringVerifierTest
         try
         {
             ToStringVerifier.forClasses(Person.class, Identified.class)
-                            .withMatchingFields(" ")
+                            .withIgnoredFields("id", "firstName", "lastName")
                             .withHashCode(true)
                             .verify();
 
