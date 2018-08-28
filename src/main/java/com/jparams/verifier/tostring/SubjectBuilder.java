@@ -9,23 +9,14 @@ import com.jparams.object.builder.provider.Provider;
 
 /**
  * Builds the subject of the test
- *
- * @param <T> subject type
  */
-class SubjectBuilder<T>
+class SubjectBuilder
 {
-    private final Class<T> clazz;
-    private final Configuration configuration;
-
-    SubjectBuilder(final Class<T> clazz)
-    {
-        this.clazz = clazz;
-        this.configuration = new Configuration().withDefaultProviders()
-                                                .withMaxDepth(2)
-                                                .withFailOnWarning(false)
-                                                .withFailOnError(false)
-                                                .withCaching(false);
-    }
+    private final Configuration configuration = new Configuration().withDefaultProviders()
+                                                                   .withMaxDepth(2)
+                                                                   .withFailOnWarning(false)
+                                                                   .withFailOnError(false)
+                                                                   .withCaching(false);
 
     /**
      * Set a prefabricated value
@@ -55,12 +46,14 @@ class SubjectBuilder<T>
     /**
      * Build test subject
      *
+     * @param clazz type
+     * @param <T>   type
      * @return test subject
      */
-    T build()
+    <T> T build(final Class<T> clazz)
     {
         // attempt to build with field injection to bypass any validation that may exist in a constructor
-        final Build<T> builtWithFieldInjection = buildWithFieldInjection();
+        final Build<T> builtWithFieldInjection = buildWithFieldInjection(clazz);
 
         if (builtWithFieldInjection.get() != null)
         {
@@ -68,7 +61,7 @@ class SubjectBuilder<T>
         }
 
         // if unable to build, attempt to build with constructor injection
-        final Build<T> builtWithConstructorInjection = buildWithConstructorInjection();
+        final Build<T> builtWithConstructorInjection = buildWithConstructorInjection(clazz);
 
         if (builtWithConstructorInjection.get() != null)
         {
@@ -79,13 +72,13 @@ class SubjectBuilder<T>
         throw new AssertionError("Failed to create instance of " + clazz + ". Failed with error: " + builtWithConstructorInjection.getErrors());
     }
 
-    private Build<T> buildWithFieldInjection()
+    private <T> Build<T> buildWithFieldInjection(final Class<T> clazz)
     {
         return ObjectBuilder.withConfiguration(configuration.withDefaultProviders(InjectionStrategy.FIELD_INJECTION))
                             .buildInstanceOf(clazz);
     }
 
-    private Build<T> buildWithConstructorInjection()
+    private <T> Build<T> buildWithConstructorInjection(final Class<T> clazz)
     {
         return ObjectBuilder.withConfiguration(configuration.withDefaultProviders(InjectionStrategy.CONSTRUCTOR_INJECTION))
                             .buildInstanceOf(clazz);

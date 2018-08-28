@@ -49,4 +49,9 @@ public class Person extends Identified
     {
         stringValue = value;
     }
+
+    public static String getStringValue()
+    {
+        return stringValue;
+    }
 }

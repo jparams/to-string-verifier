@@ -1,23 +1,33 @@
 package com.jparams.verifier.tostring;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.jparams.verifier.tostring.error.ClassNameVerificationError;
+import com.jparams.verifier.tostring.error.ErrorMessageGenerator;
+import com.jparams.verifier.tostring.error.FieldValue;
+import com.jparams.verifier.tostring.error.FieldValueVerificationError;
+import com.jparams.verifier.tostring.error.HashCodeVerificationError;
+import com.jparams.verifier.tostring.error.VerificationError;
+import com.jparams.verifier.tostring.pojo.Identified;
 import com.jparams.verifier.tostring.pojo.Person;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import junit.framework.TestCase;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class ToStringVerifierTest
 {
     private static final Lock lock = new ReentrantLock();
 
-    private ToStringVerifier<Person> subject;
+    private ToStringVerifier subject;
 
     @Before
     public void setUp()
@@ -44,10 +54,8 @@ public class ToStringVerifierTest
     public void testFailureWithClassNameStyleName()
     {
         Person.setStringValue("Person");
-
-        assertThatThrownBy(() -> subject.withOnlyTheseFields(Collections.emptyList()).withClassName(NameStyle.NAME).verify())
-            .isInstanceOf(AssertionError.class)
-            .hasMessage("\n\nExpected toString:\nPerson\n\nto start with class name:\ncom.jparams.verifier.tostring.pojo.Person");
+        final ToStringVerifier verifier = subject.withOnlyTheseFields(Collections.emptyList()).withClassName(NameStyle.NAME);
+        assertError(verifier, new ClassNameVerificationError("com.jparams.verifier.tostring.pojo.Person"));
     }
 
     @Test
@@ -62,10 +70,8 @@ public class ToStringVerifierTest
     public void testFailureWithClassNameStyleSimpleName()
     {
         Person.setStringValue("com.jparams.verifier.tostring.pojo.Person");
-
-        assertThatThrownBy(() -> subject.withOnlyTheseFields(Collections.emptyList()).withClassName(NameStyle.SIMPLE_NAME).verify())
-            .isInstanceOf(AssertionError.class)
-            .hasMessage("\n\nExpected toString:\ncom.jparams.verifier.tostring.pojo.Person\n\nto start with class name:\nPerson");
+        final ToStringVerifier verifier = subject.withOnlyTheseFields(Collections.emptyList()).withClassName(NameStyle.SIMPLE_NAME);
+        assertError(verifier, new ClassNameVerificationError("Person"));
     }
 
     @Test
@@ -81,10 +87,8 @@ public class ToStringVerifierTest
     public void testFailureWithHashCode()
     {
         Person.setStringValue("Person@111");
-
-        assertThatThrownBy(() -> subject.withOnlyTheseFields(Collections.emptyList()).withHashCode(true).verify())
-            .isInstanceOf(AssertionError.class)
-            .hasMessage("\n\nExpected toString:\nPerson@111\n\nto contain hash code:\n123");
+        final ToStringVerifier verifier = subject.withOnlyTheseFields(Collections.emptyList()).withHashCode(true);
+        assertError(verifier, new HashCodeVerificationError(123));
     }
 
     @Test
@@ -123,10 +127,46 @@ public class ToStringVerifierTest
     public void testContainsAllFieldsFailure()
     {
         Person.setStringValue("Person{id=1, firstName='A', lastName='A'}");
+        final ToStringVerifier verifier = subject.withPrefabValue(Integer.class, 1).withPrefabValue(String.class, "B");
+        assertError(verifier, new FieldValueVerificationError(Arrays.asList(new FieldValue("firstName", "B"), new FieldValue("lastName", "B"))));
+    }
 
-        assertThatThrownBy(() -> subject.withPrefabValue(Integer.class, 1).withPrefabValue(String.class, "B").verify())
-            .isInstanceOf(AssertionError.class)
-            .hasMessage("\n\nExpected toString:\nPerson{id=1, firstName='A', lastName='A'}\n\nto contain field:\nfirstName\n\nwith value:\nB");
+    @Test
+    public void testWithNullValue()
+    {
+        Person.setStringValue("Person{id=<NULL>, firstName='A', lastName='A'}");
+
+        subject.withPrefabValue(Integer.class, null)
+               .withPrefabValue(String.class, "A")
+               .withNullValue("<NULL>")
+               .verify();
+    }
+
+    @Test
+    public void testWithNullValueFailure()
+    {
+        Person.setStringValue("Person{id=null, firstName='A', lastName='A'}");
+        final ToStringVerifier verifier = subject.withPrefabValue(Integer.class, null).withPrefabValue(String.class, "A").withNullValue("<NULL>");
+        assertError(verifier, new FieldValueVerificationError(Collections.singletonList(new FieldValue("id", "<NULL>"))));
+    }
+
+    @Test
+    public void testWithFormatter()
+    {
+        Person.setStringValue("Person{id=int1, firstName='A', lastName='A'}");
+
+        subject.withPrefabValue(Integer.class, 1)
+               .withPrefabValue(String.class, "A")
+               .withFormatter(Integer.class, item -> "int" + item)
+               .verify();
+    }
+
+    @Test
+    public void testWithFormatterFailure()
+    {
+        Person.setStringValue("Person{id=1, firstName='A', lastName='A'}");
+        final ToStringVerifier verifier = subject.withPrefabValue(Integer.class, 999).withPrefabValue(String.class, "A").withFormatter(Integer.class, item -> "int" + item);
+        assertError(verifier, new FieldValueVerificationError(Collections.singletonList(new FieldValue("id", "int999"))));
     }
 
     @Test
@@ -201,9 +241,6 @@ public class ToStringVerifierTest
         subject.withIgnoredFields("a").withOnlyTheseFields("a");
     }
 
-    /**
-     * testToString
-     */
     @Test
     public void testToString()
     {
@@ -211,5 +248,33 @@ public class ToStringVerifierTest
                         .withClassName(NameStyle.SIMPLE_NAME)
                         .withIgnoredFields("password")
                         .verify();
+    }
+
+    @Test
+    public void testToStringWithMultipleClasses()
+    {
+        Person.setStringValue("Person");
+
+        try
+        {
+            ToStringVerifier.forClasses(Person.class, Identified.class)
+                            .withIgnoredFields("id", "firstName", "lastName")
+                            .withHashCode(true)
+                            .verify();
+
+            TestCase.fail("Exception expected");
+        }
+        catch (final AssertionError e)
+        {
+            final String message = e.getMessage();
+            assertThat(message).contains(ErrorMessageGenerator.generateErrorMessage(Person.class, Person.getStringValue(), Collections.singletonList(new HashCodeVerificationError(123))));
+            assertThat(message).contains(ErrorMessageGenerator.generateErrorMessage(Identified.class, "com.jparams.verifier.tostring.pojo.Identified@4d2", Collections.singletonList(new HashCodeVerificationError(1234))));
+        }
+    }
+
+    private static void assertError(final ToStringVerifier verifier, final VerificationError... verificationErrors)
+    {
+        final String errorMessage = "\n\n" + ErrorMessageGenerator.generateErrorMessage(Person.class, Person.getStringValue(), Arrays.asList(verificationErrors));
+        assertThatThrownBy(verifier::verify).isInstanceOf(AssertionError.class).hasMessage(errorMessage);
     }
 }
