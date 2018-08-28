@@ -20,7 +20,6 @@ public enum NameStyle
      */
     CANONICAL_NAME;
 
-
     public String getName(final Class<?> clazz)
     {
         switch (this)

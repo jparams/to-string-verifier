@@ -5,6 +5,7 @@ package com.jparams.verifier.tostring;
  *
  * @param <T> type
  */
+@FunctionalInterface
 public interface Formatter<T>
 {
     /**

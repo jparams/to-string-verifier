@@ -14,6 +14,7 @@ import com.jparams.verifier.tostring.error.HashCodeVerificationError;
 import com.jparams.verifier.tostring.error.VerificationError;
 import com.jparams.verifier.tostring.pojo.Identified;
 import com.jparams.verifier.tostring.pojo.Person;
+import com.jparams.verifier.tostring.pojo.internal.AbstractClass;
 
 import org.junit.After;
 import org.junit.Before;
@@ -48,6 +49,30 @@ public class ToStringVerifierTest
     public void testWithNullClass()
     {
         ToStringVerifier.forClass(null).verify();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testWithAbstractClass()
+    {
+        ToStringVerifier.forClass(AbstractClass.class).verify();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testWithInterfaceClass()
+    {
+        ToStringVerifier.forClass(FieldFilter.class).verify();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testWithEnum()
+    {
+        ToStringVerifier.forClass(Enum.class).verify();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testPackageScanWithAbstractClass()
+    {
+        ToStringVerifier.forPackage("com.jparams.verifier.tostring.pojo.internal", true).verify();
     }
 
     @Test
@@ -218,6 +243,17 @@ public class ToStringVerifierTest
     {
         Person.setStringValue("Person{id=1, firstName='A', lastName='A'}");
 
+        subject.withMatchingFields((subject, field) -> !field.getName().matches("firstName|lastName"))
+               .withPrefabValue(Integer.class, 1)
+               .withPrefabValue(String.class, "XXX")
+               .verify();
+    }
+
+    @Test
+    public void testWithMatchingFieldRegex()
+    {
+        Person.setStringValue("Person{id=1, firstName='A', lastName='A'}");
+
         subject.withMatchingFields("(.*)Name")
                .withPrefabValue(Integer.class, 2)
                .withPrefabValue(String.class, "A")
@@ -258,7 +294,7 @@ public class ToStringVerifierTest
         try
         {
             ToStringVerifier.forClasses(Person.class, Identified.class)
-                            .withIgnoredFields("id", "firstName", "lastName")
+                            .withMatchingFields((subject, field) -> false)
                             .withHashCode(true)
                             .verify();
 
@@ -270,6 +306,39 @@ public class ToStringVerifierTest
             assertThat(message).contains(ErrorMessageGenerator.generateErrorMessage(Person.class, Person.getStringValue(), Collections.singletonList(new HashCodeVerificationError(123))));
             assertThat(message).contains(ErrorMessageGenerator.generateErrorMessage(Identified.class, "com.jparams.verifier.tostring.pojo.Identified@4d2", Collections.singletonList(new HashCodeVerificationError(1234))));
         }
+    }
+
+    @Test
+    public void testToStringWithPackageScan()
+    {
+        Person.setStringValue("Person");
+
+        try
+        {
+            ToStringVerifier.forPackage("com.jparams.verifier.tostring.pojo", false)
+                            .withMatchingFields((subject, field) -> false)
+                            .withHashCode(true)
+                            .verify();
+
+            TestCase.fail("Exception expected");
+        }
+        catch (final AssertionError e)
+        {
+            final String message = e.getMessage();
+            assertThat(message).contains(ErrorMessageGenerator.generateErrorMessage(Person.class, Person.getStringValue(), Collections.singletonList(new HashCodeVerificationError(123))));
+            assertThat(message).contains(ErrorMessageGenerator.generateErrorMessage(Identified.class, "com.jparams.verifier.tostring.pojo.Identified@4d2", Collections.singletonList(new HashCodeVerificationError(1234))));
+        }
+    }
+
+    @Test
+    public void testToStringWithPackageScanWithPredicate()
+    {
+        Person.setStringValue("Person{id=1, firstName='A', lastName='A'}");
+
+        ToStringVerifier.forPackage("com.jparams.verifier.tostring.pojo", false, clazz -> !clazz.equals(Identified.class))
+                        .withPrefabValue(Integer.class, 1)
+                        .withPrefabValue(String.class, "A")
+                        .verify();
     }
 
     private static void assertError(final ToStringVerifier verifier, final VerificationError... verificationErrors)

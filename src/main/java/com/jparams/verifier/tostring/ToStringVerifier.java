@@ -1,6 +1,7 @@
 package com.jparams.verifier.tostring;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,14 +36,13 @@ import com.jparams.verifier.tostring.error.VerificationError;
 public final class ToStringVerifier
 {
     private static final int TEST_REPEAT_COUNT = 3;
-    private static final Predicate<Field> MATCH_ALL_PREDICATE = (item) -> true;
     private static final Formatter<Object> DEFAULT_FORMATTER = String::valueOf;
 
     private final SubjectBuilder builder;
     private final List<Class<?>> classes;
     private final Map<Class<?>, Formatter<Object>> formatterMap = new HashMap<>();
     private NameStyle nameStyle = null;
-    private Predicate<Field> fieldPredicate = null;
+    private FieldFilter fieldFilter = null;
     private boolean inheritedFields = true;
     private boolean hashCode = false;
     private String fieldValuePattern = "%s(.{0,4}?)%s";
@@ -50,13 +50,13 @@ public final class ToStringVerifier
 
     private ToStringVerifier(final Collection<Class<?>> classes)
     {
-        if (classes == null || classes.isEmpty())
-        {
-            throw new IllegalArgumentException("No classes found to test");
-        }
-
         this.builder = new SubjectBuilder();
-        this.classes = new ArrayList<>(classes);
+        this.classes = classes.stream().filter(ToStringVerifier::isTestableClass).collect(Collectors.toList());
+
+        if (this.classes.isEmpty())
+        {
+            throw new IllegalArgumentException("No classes found to test. A class under test cannot be null, abstract, an interface or an enum.");
+        }
     }
 
     /**
@@ -90,6 +90,37 @@ public final class ToStringVerifier
      */
     public static ToStringVerifier forClasses(final Collection<Class<?>> classes)
     {
+        return new ToStringVerifier(classes);
+    }
+
+    /**
+     * Create a verifier for a given package
+     *
+     * @param packageName     package under test
+     * @param scanRecursively true to scan all sub-packages
+     * @return verifier
+     */
+    public static ToStringVerifier forPackage(final String packageName, final boolean scanRecursively)
+    {
+        return forPackage(packageName, scanRecursively, (clazz) -> true);
+    }
+
+    /**
+     * Create a verifier for a given package
+     *
+     * @param packageName     package under test
+     * @param scanRecursively true to scan all sub-packages
+     * @param predicate       defines which classes will be tested
+     * @return verifier
+     */
+    public static ToStringVerifier forPackage(final String packageName, final boolean scanRecursively, final Predicate<Class<?>> predicate)
+    {
+        final List<Class<?>> classes = PackageScanner.findClasses(packageName, scanRecursively)
+                                                     .stream()
+                                                     .filter(ToStringVerifier::isTestableClass)
+                                                     .filter(predicate)
+                                                     .collect(Collectors.toList());
+
         return new ToStringVerifier(classes);
     }
 
@@ -191,7 +222,7 @@ public final class ToStringVerifier
     {
         assertNotNull(fields);
         this.checkFieldPredicate();
-        this.fieldPredicate = (field) -> fields.contains(field.getName());
+        this.fieldFilter = (subject, field) -> fields.contains(field.getName());
         return this;
     }
 
@@ -218,7 +249,7 @@ public final class ToStringVerifier
     {
         assertNotNull(fields);
         this.checkFieldPredicate();
-        this.fieldPredicate = (field) -> !fields.contains(field.getName());
+        this.fieldFilter = (subject, field) -> !fields.contains(field.getName());
         return this;
     }
 
@@ -231,7 +262,20 @@ public final class ToStringVerifier
     public ToStringVerifier withMatchingFields(final String regex)
     {
         this.checkFieldPredicate();
-        this.fieldPredicate = (field) -> field.getName().matches(regex);
+        this.fieldFilter = (subject, field) -> field.getName().matches(regex);
+        return this;
+    }
+
+    /**
+     * If specified, this tester will only assert that field matching this filter criteria are present in the (@link {@link Object#toString()} output.
+     *
+     * @param fields filter criteria
+     * @return this
+     */
+    public ToStringVerifier withMatchingFields(final FieldFilter fields)
+    {
+        assertNotNull(fields);
+        this.fieldFilter = fields;
         return this;
     }
 
@@ -327,7 +371,7 @@ public final class ToStringVerifier
 
         final List<FieldValue> fieldValues = FieldsProvider.provide(clazz, inheritedFields)
                                                            .stream()
-                                                           .filter(fieldPredicate == null ? MATCH_ALL_PREDICATE : fieldPredicate)
+                                                           .filter((field) -> fieldFilter == null || fieldFilter.matches(clazz, field))
                                                            .map(field -> verifyField(subject, stringValue, field))
                                                            .filter(Optional::isPresent)
                                                            .map(Optional::get)
@@ -390,10 +434,16 @@ public final class ToStringVerifier
 
     private void checkFieldPredicate()
     {
-        if (fieldPredicate != null)
+        if (fieldFilter != null)
         {
             throw new IllegalArgumentException("You can call either withOnlyTheseFields, withIgnoredFields or withMatchingFields, but not a combination of the three.");
         }
+    }
+
+    private static boolean isTestableClass(final Class<?> clazz)
+    {
+        return clazz != null && !clazz.isEnum() && !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers());
+
     }
 
     private static void assertNotNull(final Object value)
