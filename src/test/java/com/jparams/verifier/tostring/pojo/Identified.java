@@ -13,4 +13,10 @@ public class Identified
     {
         return id;
     }
+
+    @Override
+    public int hashCode()
+    {
+        return 1234;
+    }
 }

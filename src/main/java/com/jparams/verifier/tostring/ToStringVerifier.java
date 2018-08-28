@@ -1,14 +1,27 @@
 package com.jparams.verifier.tostring;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import com.jparams.verifier.tostring.error.ClassNameVerificationError;
+import com.jparams.verifier.tostring.error.ErrorMessageGenerator;
+import com.jparams.verifier.tostring.error.FieldValue;
+import com.jparams.verifier.tostring.error.FieldValueVerificationError;
+import com.jparams.verifier.tostring.error.HashCodeVerificationError;
+import com.jparams.verifier.tostring.error.VerificationError;
 
 /**
  * {@link ToStringVerifier} can be used in unit tests to verify that the {@link Object#toString()} returns
@@ -18,39 +31,66 @@ import java.util.stream.Collectors;
  * To get started, use {@code ToStringVerifier} as follows:
  * <p>
  * {@code ToStringVerifier.forClass(MyClass.class).verify();}
- * <p>
- *
- * @param <T> class under test
  */
-public final class ToStringVerifier<T>
+public final class ToStringVerifier
 {
-    private static final int FIELD_TEST_REPEAT_COUNT = 5;
+    private static final int TEST_REPEAT_COUNT = 3;
     private static final Predicate<Field> MATCH_ALL_PREDICATE = (item) -> true;
+    private static final Formatter<Object> DEFAULT_FORMATTER = String::valueOf;
 
-    private final SubjectBuilder<T> subjectBuilder;
-    private final Class<T> clazz;
+    private final SubjectBuilder builder;
+    private final List<Class<?>> classes;
+    private final Map<Class<?>, Formatter<Object>> formatterMap = new HashMap<>();
     private NameStyle nameStyle = null;
     private Predicate<Field> fieldPredicate = null;
     private boolean inheritedFields = true;
     private boolean hashCode = false;
     private String fieldValuePattern = "%s(.{0,4}?)%s";
+    private String nullValue = "null";
 
-    private ToStringVerifier(final Class<T> clazz)
+    private ToStringVerifier(final Collection<Class<?>> classes)
     {
-        this.subjectBuilder = new SubjectBuilder<>(clazz);
-        this.clazz = clazz;
+        if (classes == null || classes.isEmpty())
+        {
+            throw new IllegalArgumentException("No classes found to test");
+        }
+
+        this.builder = new SubjectBuilder();
+        this.classes = new ArrayList<>(classes);
     }
 
     /**
      * Create a verifier for the given class
      *
      * @param clazz class to test
-     * @param <T>   class type
-     * @return tester
+     * @return verifier
      */
-    public static <T> ToStringVerifier<T> forClass(final Class<T> clazz)
+    public static ToStringVerifier forClass(final Class<?> clazz)
     {
-        return new ToStringVerifier<>(clazz);
+        assertNotNull(clazz);
+        return new ToStringVerifier(Collections.singletonList(clazz));
+    }
+
+    /**
+     * Create a verifier for the given classes
+     *
+     * @param classes classes to test
+     * @return verifier
+     */
+    public static ToStringVerifier forClasses(final Class<?>... classes)
+    {
+        return forClasses(Arrays.asList(classes));
+    }
+
+    /**
+     * Create a verifier for the given classes
+     *
+     * @param classes classes to test
+     * @return verifier
+     */
+    public static ToStringVerifier forClasses(final Collection<Class<?>> classes)
+    {
+        return new ToStringVerifier(classes);
     }
 
     /**
@@ -75,12 +115,9 @@ public final class ToStringVerifier<T>
      * @param fieldValuePattern field value pattern
      * @return this
      */
-    public ToStringVerifier<T> withFieldValuePattern(final String fieldValuePattern)
+    public ToStringVerifier withFieldValuePattern(final String fieldValuePattern)
     {
-        if (fieldValuePattern == null)
-        {
-            throw new IllegalArgumentException("Null field value pattern supplied");
-        }
+        assertNotNull(fieldValuePattern);
 
         if (StringUtils.contains(fieldValuePattern, "%s") != 2)
         {
@@ -98,8 +135,9 @@ public final class ToStringVerifier<T>
      * @param nameStyle style of the class name
      * @return this
      */
-    public ToStringVerifier<T> withClassName(final NameStyle nameStyle)
+    public ToStringVerifier withClassName(final NameStyle nameStyle)
     {
+        assertNotNull(nameStyle);
         this.nameStyle = nameStyle;
         return this;
     }
@@ -111,7 +149,7 @@ public final class ToStringVerifier<T>
      * @param hashCode check for inclusion of the hash code
      * @return this
      */
-    public ToStringVerifier<T> withHashCode(final boolean hashCode)
+    public ToStringVerifier withHashCode(final boolean hashCode)
     {
         this.hashCode = hashCode;
         return this;
@@ -123,7 +161,7 @@ public final class ToStringVerifier<T>
      * @param inheritedFields true to test for fields inherited from the parent class
      * @return this
      */
-    public ToStringVerifier<T> withInheritedFields(final boolean inheritedFields)
+    public ToStringVerifier withInheritedFields(final boolean inheritedFields)
     {
         this.inheritedFields = inheritedFields;
         return this;
@@ -136,7 +174,7 @@ public final class ToStringVerifier<T>
      * @param fields field names to include in test
      * @return this
      */
-    public ToStringVerifier<T> withOnlyTheseFields(final String... fields)
+    public ToStringVerifier withOnlyTheseFields(final String... fields)
     {
         final Set<String> fieldNamesSet = new HashSet<>(Arrays.asList(fields));
         return withOnlyTheseFields(fieldNamesSet);
@@ -149,13 +187,9 @@ public final class ToStringVerifier<T>
      * @param fields field names to include in test
      * @return this
      */
-    public ToStringVerifier<T> withOnlyTheseFields(final Collection<String> fields)
+    public ToStringVerifier withOnlyTheseFields(final Collection<String> fields)
     {
-        if (fields == null)
-        {
-            throw new IllegalArgumentException("Null list of fields supplied");
-        }
-
+        assertNotNull(fields);
         this.checkFieldPredicate();
         this.fieldPredicate = (field) -> fields.contains(field.getName());
         return this;
@@ -168,7 +202,7 @@ public final class ToStringVerifier<T>
      * @param fields field names to exclude in test
      * @return this
      */
-    public ToStringVerifier<T> withIgnoredFields(final String... fields)
+    public ToStringVerifier withIgnoredFields(final String... fields)
     {
         return withIgnoredFields(new HashSet<>(Arrays.asList(fields)));
     }
@@ -180,13 +214,9 @@ public final class ToStringVerifier<T>
      * @param fields field names to exclude in test
      * @return this
      */
-    public ToStringVerifier<T> withIgnoredFields(final Collection<String> fields)
+    public ToStringVerifier withIgnoredFields(final Collection<String> fields)
     {
-        if (fields == null)
-        {
-            throw new IllegalArgumentException("Null list of fields supplied");
-        }
-
+        assertNotNull(fields);
         this.checkFieldPredicate();
         this.fieldPredicate = (field) -> !fields.contains(field.getName());
         return this;
@@ -198,7 +228,7 @@ public final class ToStringVerifier<T>
      * @param regex field name match regex
      * @return this
      */
-    public ToStringVerifier<T> withMatchingFields(final String regex)
+    public ToStringVerifier withMatchingFields(final String regex)
     {
         this.checkFieldPredicate();
         this.fieldPredicate = (field) -> field.getName().matches(regex);
@@ -213,9 +243,39 @@ public final class ToStringVerifier<T>
      * @param <S>         The class of the prefabricated values.
      * @return this
      */
-    public <S> ToStringVerifier<T> withPrefabValue(final Class<S> type, final S prefabValue)
+    public <S> ToStringVerifier withPrefabValue(final Class<S> type, final S prefabValue)
     {
-        this.subjectBuilder.setPrefabValue(type, prefabValue);
+        this.builder.setPrefabValue(type, prefabValue);
+        return this;
+    }
+
+    /**
+     * Define a value formatter for the given class type.
+     *
+     * @param clazz     class
+     * @param formatter formatter
+     * @param <S>       value type
+     * @return this
+     */
+    public <S> ToStringVerifier withFormatter(final Class<S> clazz, final Formatter<S> formatter)
+    {
+        assertNotNull(clazz);
+        assertNotNull(formatter);
+        @SuppressWarnings("unchecked") final Formatter<Object> objectFormatter = (Formatter<Object>) formatter;
+        this.formatterMap.put(clazz, objectFormatter);
+        return this;
+    }
+
+    /**
+     * The value to expect on the toString output when a field value is null. This defaults to <code>null</code>
+     *
+     * @param nullValue null value
+     * @return this
+     */
+    public ToStringVerifier withNullValue(final String nullValue)
+    {
+        assertNotNull(nullValue);
+        this.nullValue = nullValue;
         return this;
     }
 
@@ -226,80 +286,101 @@ public final class ToStringVerifier<T>
      */
     public void verify()
     {
-        if (clazz == null)
+        for (int i = 0; i < TEST_REPEAT_COUNT; i++) // Run the same test multiple time to ensure result consistency
         {
-            throw new IllegalArgumentException("Null class to test");
+            final String message = classes.stream()
+                                          .filter(Objects::nonNull)
+                                          .map(this::verify)
+                                          .filter(Optional::isPresent)
+                                          .map(Optional::get)
+                                          .reduce((message1, message2) -> message1 + "\n\n---\n\n" + message2)
+                                          .orElse(null);
+
+            if (message != null)
+            {
+                throw new AssertionError("\n\n" + message);
+            }
         }
+    }
 
-        final T subject = subjectBuilder.build();
-        final String toString = subject.toString();
+    private Optional<String> verify(final Class<?> clazz)
+    {
+        final Object subject = builder.build(clazz);
+        final String stringValue = subject.toString();
 
-        if (toString == null)
+        if (stringValue == null)
         {
             throw new AssertionError("toString method returned a null string");
         }
 
+        final List<VerificationError> verificationErrors = new ArrayList<>();
+
         if (nameStyle != null)
         {
-            verifyClassName(toString, nameStyle.getName(clazz));
+            verifyClassName(stringValue, nameStyle.getName(clazz)).ifPresent(verificationErrors::add);
         }
 
         if (hashCode)
         {
-            verifyHashCode(toString, subject.hashCode());
+            verifyHashCode(stringValue, subject.hashCode()).ifPresent(verificationErrors::add);
         }
 
-        verifyFields(FIELD_TEST_REPEAT_COUNT);
-    }
+        final List<FieldValue> fieldValues = FieldsProvider.provide(clazz, inheritedFields)
+                                                           .stream()
+                                                           .filter(fieldPredicate == null ? MATCH_ALL_PREDICATE : fieldPredicate)
+                                                           .map(field -> verifyField(subject, stringValue, field))
+                                                           .filter(Optional::isPresent)
+                                                           .map(Optional::get)
+                                                           .collect(Collectors.toList());
 
-    private void verifyClassName(final String string, final String className)
-    {
-        if (!string.startsWith(className))
+        if (!fieldValues.isEmpty())
         {
-            verificationFailed(string, "start with class name", className);
+            verificationErrors.add(new FieldValueVerificationError(fieldValues));
         }
-    }
 
-    private void verifyHashCode(final String string, final int hashCode)
-    {
-        final String stringHashCode = String.valueOf(hashCode);
-
-        if (!string.contains(stringHashCode))
+        if (verificationErrors.isEmpty())
         {
-            verificationFailed(string, "contain hash code", hashCode);
+            return Optional.empty();
         }
+
+        return Optional.of(ErrorMessageGenerator.generateErrorMessage(clazz, stringValue, verificationErrors));
     }
 
-    private void verifyFields(final int repeatCount)
+    private Optional<VerificationError> verifyClassName(final String stringValue, final String className)
     {
-        final List<Field> fields = FieldsProvider.provide(clazz, inheritedFields)
-                                                 .stream()
-                                                 .filter(fieldPredicate == null ? MATCH_ALL_PREDICATE : fieldPredicate)
-                                                 .collect(Collectors.toList());
-
-        // Run field verification multiple times as tests rely on randomly generated values. This will ensure tests
-        // pass consistently
-        for (int i = 0; i < repeatCount; i++)
+        if (stringValue.startsWith(className))
         {
-            final T subject = subjectBuilder.build();
-            fields.forEach(field -> verifyField(field, subject));
+            return Optional.empty();
         }
+
+        return Optional.of(new ClassNameVerificationError(className));
     }
 
-    private void verifyField(final Field field, final T subject)
+    private Optional<VerificationError> verifyHashCode(final String stringValue, final int hashCode)
+    {
+        if (stringValue.contains(String.valueOf(hashCode)))
+        {
+            return Optional.empty();
+        }
+
+        return Optional.of(new HashCodeVerificationError(hashCode));
+    }
+
+    private Optional<FieldValue> verifyField(final Object subject, final String stringValue, final Field field)
     {
         try
         {
-            final String fieldValue = String.valueOf(field.get(subject));
-            final String stringValue = subject.toString();
-
-            final String regex = String.format("(.*)" + fieldValuePattern + "(.*)", Pattern.quote(field.getName()), Pattern.quote(fieldValue));
+            final Object fieldValue = field.get(subject);
+            final String fieldValueString = fieldValue == null ? nullValue : formatterMap.getOrDefault(fieldValue.getClass(), DEFAULT_FORMATTER).format(fieldValue);
+            final String regex = String.format("(.*)" + fieldValuePattern + "(.*)", Pattern.quote(field.getName()), Pattern.quote(fieldValueString));
             final Pattern pattern = Pattern.compile(regex, Pattern.DOTALL);
 
-            if (!pattern.matcher(stringValue).matches())
+            if (pattern.matcher(stringValue).matches())
             {
-                verificationFailed(stringValue, "contain field", field.getName() + "\n\nwith value:\n" + fieldValue);
+                return Optional.empty();
             }
+
+            return Optional.of(new FieldValue(field.getName(), fieldValueString));
         }
         catch (final IllegalAccessException e)
         {
@@ -307,17 +388,19 @@ public final class ToStringVerifier<T>
         }
     }
 
-    private void verificationFailed(final String string, final String field, final Object expectedValue)
-    {
-        final String message = String.format("\n\nExpected toString:\n%s\n\nto %s:\n%s", string, field, expectedValue);
-        throw new AssertionError(message);
-    }
-
     private void checkFieldPredicate()
     {
         if (fieldPredicate != null)
         {
             throw new IllegalArgumentException("You can call either withOnlyTheseFields, withIgnoredFields or withMatchingFields, but not a combination of the three.");
+        }
+    }
+
+    private static void assertNotNull(final Object value)
+    {
+        if (value == null)
+        {
+            throw new IllegalArgumentException("Unexpected null value");
         }
     }
 }
