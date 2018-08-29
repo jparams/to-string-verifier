@@ -69,7 +69,7 @@ class SubjectBuilder
         }
 
         // if unable to build with either injection method, throw assertion error
-        throw new AssertionError("Failed to create instance of " + clazz + ". Failed with error: " + builtWithConstructorInjection.getErrors());
+        throw new AssertionError("Failed to create instance of " + clazz + ". Failed with error:\n" + builtWithConstructorInjection.getErrors());
     }
 
     private <T> Build<T> buildWithFieldInjection(final Class<T> clazz)
