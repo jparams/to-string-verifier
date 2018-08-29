@@ -21,12 +21,11 @@ public class ErrorMessageGeneratorTest
         assertThat(errorMessage).isEqualTo("Failed verification:\n"
                                                + "com.jparams.verifier.tostring.pojo.Person\n"
                                                + "\n"
-                                               + "Expected toString:\n"
+                                               + "Expected auto generated toString:\n"
                                                + "some string\n"
                                                + "\n"
                                                + "To start with class name: com.jparams.verifier.tostring.pojo.Person");
     }
-
 
     @Test
     public void testMultipleErrorMessages()
@@ -40,7 +39,7 @@ public class ErrorMessageGeneratorTest
         assertThat(errorMessage).isEqualTo("Failed verification:\n"
                                                + "com.jparams.verifier.tostring.pojo.Person\n"
                                                + "\n"
-                                               + "Expected toString:\n"
+                                               + "Expected auto generated toString:\n"
                                                + "some string\n"
                                                + "\n"
                                                + "To:\n"

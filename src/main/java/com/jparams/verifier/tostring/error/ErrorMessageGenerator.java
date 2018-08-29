@@ -23,7 +23,7 @@ public final class ErrorMessageGenerator
     {
         final StringBuilder builder = new StringBuilder("Failed verification:\n").append(clazz.getName())
                                                                                  .append("\n\n")
-                                                                                 .append("Expected toString:\n")
+                                                                                 .append("Expected auto generated toString:\n")
                                                                                  .append(stringValue)
                                                                                  .append(MESSAGE_SPLITTER)
                                                                                  .append("To");
