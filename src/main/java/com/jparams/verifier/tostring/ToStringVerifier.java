@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.jparams.verifier.tostring.error.ClassNameVerificationError;
 import com.jparams.verifier.tostring.error.ErrorMessageGenerator;
@@ -45,7 +46,6 @@ public final class ToStringVerifier
     private FieldFilter fieldFilter = null;
     private boolean inheritedFields = true;
     private boolean hashCode = false;
-    private String fieldValuePattern = "%s(.{0,4}?)%s";
     private String nullValue = "null";
 
     private ToStringVerifier(final Collection<Class<?>> classes)
@@ -122,41 +122,6 @@ public final class ToStringVerifier
                                                      .collect(Collectors.toList());
 
         return new ToStringVerifier(classes);
-    }
-
-    /**
-     * Specify a alternate field value pattern where the first <code>%s</code> will be replaced by the the field name and the second <code>%s</code>
-     * will be replaced by the expected value.<br><br>
-     *
-     * If an alternate pattern is not provided, the following default pattern will be used:<br><br>
-     *
-     * Default pattern: %s(.{0,4}?)%s<br><br>
-     *
-     * Here is an example what this pattern will look like once it is compiled:<br>
-     * - Field Name: firstName<br>
-     * - Expected Value: John<br>
-     * - Compiled Pattern: firstName(.{0,4}?)John<br><br>
-     *
-     * This pattern will successfully match the following field value pair variations:<br>
-     * - firstName=John<br>
-     * - firstName = John<br>
-     * - firstName='John'<br>
-     * - firstName = 'John'<br>
-     *
-     * @param fieldValuePattern field value pattern
-     * @return this
-     */
-    public ToStringVerifier withFieldValuePattern(final String fieldValuePattern)
-    {
-        assertNotNull(fieldValuePattern);
-
-        if (StringUtils.contains(fieldValuePattern, "%s") != 2)
-        {
-            throw new IllegalArgumentException("Invalid field value pattern. Expected pattern to contain two instances of: %s");
-        }
-
-        this.fieldValuePattern = fieldValuePattern;
-        return this;
     }
 
     /**
@@ -330,7 +295,7 @@ public final class ToStringVerifier
      */
     public void verify()
     {
-        for (int i = 0; i < TEST_REPEAT_COUNT; i++) // Run the same test multiple time to ensure result consistency
+        for (int i = 0; i < TEST_REPEAT_COUNT; i++) // Run the same test multiple times to ensure consistency in outcome
         {
             final String message = classes.stream()
                                           .filter(Objects::nonNull)
@@ -402,7 +367,7 @@ public final class ToStringVerifier
 
     private Optional<VerificationError> verifyHashCode(final String stringValue, final int hashCode)
     {
-        if (stringValue.contains(String.valueOf(hashCode)))
+        if (stringValue.contains(String.valueOf(hashCode)) || stringValue.contains(Integer.toHexString(hashCode)))
         {
             return Optional.empty();
         }
@@ -412,24 +377,65 @@ public final class ToStringVerifier
 
     private Optional<FieldValue> verifyField(final Object subject, final String stringValue, final Field field)
     {
+        final List<String> values = getFieldValues(subject, field);
+        final String valuePattern = values.stream().map(Pattern::quote).reduce((val1, val2) -> val1 + "(.{0,4}?)" + val2).orElse("");
+        final String regex = String.format("(.*)%s(.{0,4}?)%s(.*)", Pattern.quote(field.getName()), valuePattern);
+        final Pattern pattern = Pattern.compile(regex, Pattern.DOTALL);
+
+        if (pattern.matcher(stringValue).matches())
+        {
+            return Optional.empty();
+        }
+
+        return Optional.of(new FieldValue(field.getName(), values.stream().reduce((val1, val2) -> val1 + ", " + val2).orElse("")));
+    }
+
+    private List<String> getFieldValues(final Object subject, final Field field)
+    {
+        final Object value;
+
         try
         {
-            final Object fieldValue = field.get(subject);
-            final String fieldValueString = fieldValue == null ? nullValue : formatterMap.getOrDefault(fieldValue.getClass(), DEFAULT_FORMATTER).format(fieldValue);
-            final String regex = String.format("(.*)" + fieldValuePattern + "(.*)", Pattern.quote(field.getName()), Pattern.quote(fieldValueString));
-            final Pattern pattern = Pattern.compile(regex, Pattern.DOTALL);
-
-            if (pattern.matcher(stringValue).matches())
-            {
-                return Optional.empty();
-            }
-
-            return Optional.of(new FieldValue(field.getName(), fieldValueString));
+            value = field.get(subject);
         }
         catch (final IllegalAccessException e)
         {
             throw new InternalErrorException("Failed to access internals of test subject", e);
         }
+
+        if (value == null)
+        {
+            return Collections.singletonList(nullValue);
+        }
+
+        if (value.getClass().isArray())
+        {
+            return Stream.of((Object[]) value).map(this::formatValue).collect(Collectors.toList());
+        }
+
+        if (value instanceof Collection)
+        {
+            return ((Collection<?>) value).stream()
+                                          .map(this::formatValue)
+                                          .collect(Collectors.toList());
+        }
+
+        if (value instanceof Map)
+        {
+            return ((Map<?, ?>) value).entrySet()
+                                      .stream()
+                                      .map(entry -> String.format("%s=%s", formatValue(entry.getKey()), formatValue(entry.getValue())))
+                                      .collect(Collectors.toList());
+        }
+
+        return Stream.of(value)
+                     .map(this::formatValue)
+                     .collect(Collectors.toList());
+    }
+
+    private String formatValue(final Object value)
+    {
+        return value == null ? nullValue : formatterMap.getOrDefault(value.getClass(), DEFAULT_FORMATTER).format(value);
     }
 
     private void checkFieldPredicate()
@@ -443,7 +449,6 @@ public final class ToStringVerifier
     private static boolean isTestableClass(final Class<?> clazz)
     {
         return clazz != null && !clazz.isEnum() && !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers());
-
     }
 
     private static void assertNotNull(final Object value)

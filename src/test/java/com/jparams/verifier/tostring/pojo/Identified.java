@@ -19,4 +19,10 @@ public class Identified
     {
         return 1234;
     }
+
+    @Override
+    public String toString()
+    {
+        return this.getClass().getName();
+    }
 }

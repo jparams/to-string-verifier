@@ -125,24 +125,6 @@ public class ToStringVerifierTest
     }
 
     @Test
-    public void testWithFieldValuePatter()
-    {
-        subject.withFieldValuePattern("%s=(.{0,1}?)%s").verify();
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testWithInvalidFieldValuePattern()
-    {
-        subject.withFieldValuePattern("%s=").verify();
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testWithNullFieldValuePattern()
-    {
-        subject.withFieldValuePattern(null).verify();
-    }
-
-    @Test
     public void testContainsAllFields()
     {
         subject.verify();
@@ -304,7 +286,7 @@ public class ToStringVerifierTest
         {
             final String message = e.getMessage();
             assertThat(message).contains(ErrorMessageGenerator.generateErrorMessage(Person.class, Person.getStringValue(), Collections.singletonList(new HashCodeVerificationError(123))));
-            assertThat(message).contains(ErrorMessageGenerator.generateErrorMessage(Identified.class, "com.jparams.verifier.tostring.pojo.Identified@4d2", Collections.singletonList(new HashCodeVerificationError(1234))));
+            assertThat(message).contains(ErrorMessageGenerator.generateErrorMessage(Identified.class, "com.jparams.verifier.tostring.pojo.Identified", Collections.singletonList(new HashCodeVerificationError(1234))));
         }
     }
 
@@ -326,7 +308,7 @@ public class ToStringVerifierTest
         {
             final String message = e.getMessage();
             assertThat(message).contains(ErrorMessageGenerator.generateErrorMessage(Person.class, Person.getStringValue(), Collections.singletonList(new HashCodeVerificationError(123))));
-            assertThat(message).contains(ErrorMessageGenerator.generateErrorMessage(Identified.class, "com.jparams.verifier.tostring.pojo.Identified@4d2", Collections.singletonList(new HashCodeVerificationError(1234))));
+            assertThat(message).contains(ErrorMessageGenerator.generateErrorMessage(Identified.class, "com.jparams.verifier.tostring.pojo.Identified", Collections.singletonList(new HashCodeVerificationError(1234))));
         }
     }
 
@@ -335,7 +317,7 @@ public class ToStringVerifierTest
     {
         Person.setStringValue("Person{id=1, firstName='A', lastName='A'}");
 
-        ToStringVerifier.forPackage("com.jparams.verifier.tostring.pojo", false, clazz -> !clazz.equals(Identified.class))
+        ToStringVerifier.forPackage("com.jparams.verifier.tostring.pojo", false, clazz -> clazz.equals(Person.class))
                         .withPrefabValue(Integer.class, 1)
                         .withPrefabValue(String.class, "A")
                         .verify();
