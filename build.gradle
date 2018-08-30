@@ -15,7 +15,7 @@ apply plugin: 'maven'
 apply from: 'publish.gradle'
 
 group = 'com.jparams'
-version = '1.2.2'
+version = '1.2.3'
 
 sourceCompatibility = 1.8
 
@@ -24,7 +24,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.jparams:object-builder:1.0.7'
+    compile 'com.jparams:object-builder:1.0.9'
     testCompile 'junit:junit:4.12'
     testCompile 'org.assertj:assertj-core:2.6.0'
     testCompile 'eu.codearte.catch-exception:catch-exception:1.4.4'
