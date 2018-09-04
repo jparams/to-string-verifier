@@ -7,7 +7,7 @@
 ### Get To String Verifier
 
 Maven:
-```
+```xml
 <dependency>
     <groupId>com.jparams</groupId>
     <artifactId>to-string-verifier</artifactId>
@@ -16,8 +16,8 @@ Maven:
 ```
 
 Gradle:
-```
-compile 'com.jparams:to-string-verifier:1.x.x'
+```groovy
+testCompile 'com.jparams:to-string-verifier:1.x.x'
 ```
 
 ### What is To String Verifier?
