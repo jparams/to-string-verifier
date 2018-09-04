@@ -1,9 +1,9 @@
 language: java
 jdk:
-- oraclejdk8
+  - oraclejdk8
 script:
-- travis_wait 40 gradle clean build uploadArchives -PnexusUsername=$NEXUS_USERNAME -PnexusPassword=$NEXUS_PASSWORD
-  -Psigning.keyId=$SIGNING_KEY -Psigning.password=$SIGNING_PASSWORD -Psigning.secretKeyRingFile=key.gpg
+  - 'if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then travis_wait 40 gradle clean build; fi'
+  - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then travis_wait 40 gradle clean build uploadArchives -PnexusUsername=$NEXUS_USERNAME -PnexusPassword=$NEXUS_PASSWORD -Psigning.keyId=$SIGNING_KEY -Psigning.password=$SIGNING_PASSWORD -Psigning.secretKeyRingFile=key.gpg; fi'
 env:
   global:
   - secure: wECCxbmUynUbNtne53FGBmEbvIkkMyc61Z8VPEFXpdhjHfygg2A1Q0LLH35fVpwBDA3cISva6kgNuZgG7KaZCNJTUaN5F76wNC96fhc7wEqWDRdpB5iCNlicwxzY3jKAC/SrpjCcneSzbzI2o7q/wuZ6ik/7rgx0HXZC66UFG6H9j44I4xKueNJqEZ2L8yPDF06HzU+1uxr+0W6RUNdHSE4i17IsalwUiugbaqkP94Yalfj6+bM/96VU7djYnuq5UjXFqmsMjB5xLyx7Hh9/TOHYCuQYwKFc3p5ttqIvLJvgYTriBqnXP22M1Y+UBnbMEVAN7F2lAJx/6CNNV9ZJYB/UqeChpFJ3Pw5PchMV37Khbhzq00LDAg3EXRCUrykdqs4T2h+RTqGmREaU7OpGR08OqqLMSeZuHTaHoU3g/+FcocwsVQupm2Z+ZlZsLDxS4usSmbivKvt6tCXdoqss1IWhN590gyeo/eR02649Gceg0yP0qtwulyeZ7EtBzYXueJ3frZVwCUKMn3YJo2zmmT7rtUYsrhE6IXPhO2yUCvJ7vQadIXDr550DDa8yHefw542PIFVMzkQxNApEmPK1BCuA/DbI6XbWFijVYAaMUIv2PTJFgGWpBGAep6yJHtUVjRzo5lpqGfe3KtBaKjHYeTFniFtbzW0U9qYC0xjddgI=
