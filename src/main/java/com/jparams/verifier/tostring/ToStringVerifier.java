@@ -24,6 +24,7 @@ import com.jparams.verifier.tostring.error.FieldValue;
 import com.jparams.verifier.tostring.error.FieldValueVerificationError;
 import com.jparams.verifier.tostring.error.HashCodeVerificationError;
 import com.jparams.verifier.tostring.error.VerificationError;
+import com.jparams.verifier.tostring.preset.Preset;
 
 /**
  * {@link ToStringVerifier} can be used in unit tests to verify that the {@link Object#toString()} returns
@@ -125,6 +126,19 @@ public final class ToStringVerifier
     }
 
     /**
+     * A number of presets come with this library. For pre-made presets, see {@link com.jparams.verifier.tostring.preset.Presets}. A preset
+     * is a pre-defined configuration for the ToStringVerifier.
+     *
+     * @param preset preset
+     * @return verifier
+     */
+    public ToStringVerifier withPreset(final Preset preset)
+    {
+        preset.apply(this);
+        return this;
+    }
+
+    /**
      * If specified, this tester will assert that the {@link Object#toString()} output contains the name of the subject class in
      * the {@link NameStyle} specified.
      *
@@ -133,7 +147,6 @@ public final class ToStringVerifier
      */
     public ToStringVerifier withClassName(final NameStyle nameStyle)
     {
-        assertNotNull(nameStyle);
         this.nameStyle = nameStyle;
         return this;
     }

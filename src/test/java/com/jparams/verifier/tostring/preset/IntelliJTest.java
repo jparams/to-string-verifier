@@ -1,8 +1,7 @@
-package com.jparams.verifier.tostring.vendor;
+package com.jparams.verifier.tostring.preset;
 
 import java.util.Arrays;
 
-import com.jparams.verifier.tostring.NameStyle;
 import com.jparams.verifier.tostring.ToStringVerifier;
 
 import org.junit.Test;
@@ -26,6 +25,8 @@ public class IntelliJTest extends AbstractDataTest
     @Test
     public void testToString()
     {
-        ToStringVerifier.forClass(this.getClass()).withClassName(NameStyle.SIMPLE_NAME).verify();
+        ToStringVerifier.forClass(IntelliJTest.class)
+                        .withPreset(Presets.INTELLI_J)
+                        .verify();
     }
 }

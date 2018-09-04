@@ -1,12 +1,14 @@
-package com.jparams.verifier.tostring.vendor;
+package com.jparams.verifier.tostring.preset;
 
 import java.util.Arrays;
 
-import com.jparams.verifier.tostring.NameStyle;
 import com.jparams.verifier.tostring.ToStringVerifier;
 
 import org.junit.Test;
 
+/**
+ * Eclipse toString format
+ */
 public class EclipseTest extends AbstractDataTest
 {
     @Override
@@ -18,7 +20,8 @@ public class EclipseTest extends AbstractDataTest
     @Test
     public void testToString()
     {
-        ToStringVerifier.forClass(this.getClass()).withClassName(NameStyle.SIMPLE_NAME).verify();
+        ToStringVerifier.forClass(EclipseTest.class)
+                        .withPreset(Presets.ECLIPSE)
+                        .verify();
     }
-
 }

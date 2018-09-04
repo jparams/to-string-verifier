@@ -1,11 +1,13 @@
-package com.jparams.verifier.tostring.vendor;
+package com.jparams.verifier.tostring.preset;
 
 import com.google.common.base.MoreObjects;
-import com.jparams.verifier.tostring.NameStyle;
 import com.jparams.verifier.tostring.ToStringVerifier;
 
 import org.junit.Test;
 
+/**
+ * Guava toString using {@link MoreObjects}
+ */
 public class GuavaTest extends AbstractDataTest
 {
     @Override
@@ -22,6 +24,8 @@ public class GuavaTest extends AbstractDataTest
     @Test
     public void testToString()
     {
-        ToStringVerifier.forClass(this.getClass()).withClassName(NameStyle.SIMPLE_NAME).verify();
+        ToStringVerifier.forClass(GuavaTest.class)
+                        .withPreset(Presets.GUAVA_TO_STRING_HELPER)
+                        .verify();
     }
 }
