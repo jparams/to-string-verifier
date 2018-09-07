@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 import com.jparams.verifier.tostring.error.ClassNameVerificationError;
 import com.jparams.verifier.tostring.error.ErrorMessageGenerator;
 import com.jparams.verifier.tostring.error.FieldValue;
+import com.jparams.verifier.tostring.error.FieldValue.ErrorType;
 import com.jparams.verifier.tostring.error.FieldValueVerificationError;
 import com.jparams.verifier.tostring.error.HashCodeVerificationError;
 import com.jparams.verifier.tostring.error.VerificationError;
@@ -48,6 +49,7 @@ public final class ToStringVerifier
     private boolean inheritedFields = true;
     private boolean hashCode = false;
     private String nullValue = "null";
+    private boolean failOnExcludedFields = false;
 
     private ToStringVerifier(final Collection<Class<?>> classes)
     {
@@ -143,7 +145,7 @@ public final class ToStringVerifier
      * the {@link NameStyle} specified.
      *
      * @param nameStyle style of the class name
-     * @return this
+     * @return verifier
      */
     public ToStringVerifier withClassName(final NameStyle nameStyle)
     {
@@ -156,7 +158,7 @@ public final class ToStringVerifier
      * by {@link Object#hashCode()}.
      *
      * @param hashCode check for inclusion of the hash code
-     * @return this
+     * @return verifier
      */
     public ToStringVerifier withHashCode(final boolean hashCode)
     {
@@ -168,7 +170,7 @@ public final class ToStringVerifier
      * This is enabled by default. Set this to false to ignore fields inherited from the parent class.
      *
      * @param inheritedFields true to test for fields inherited from the parent class
-     * @return this
+     * @return verifier
      */
     public ToStringVerifier withInheritedFields(final boolean inheritedFields)
     {
@@ -181,7 +183,7 @@ public final class ToStringVerifier
      * assert all fields are present, do not call this method. To test for all fields excluding some, call {@link #withIgnoredFields(Collection)}.
      *
      * @param fields field names to include in test
-     * @return this
+     * @return verifier
      */
     public ToStringVerifier withOnlyTheseFields(final String... fields)
     {
@@ -194,7 +196,7 @@ public final class ToStringVerifier
      * assert all fields are present, do not call this method. To test for all fields excluding some, call {@link #withIgnoredFields(Collection)}.
      *
      * @param fields field names to include in test
-     * @return this
+     * @return verifier
      */
     public ToStringVerifier withOnlyTheseFields(final Collection<String> fields)
     {
@@ -209,7 +211,7 @@ public final class ToStringVerifier
      * assert only certain fields are present, do not call this method, instead use {@link #withOnlyTheseFields(Collection)}.
      *
      * @param fields field names to exclude in test
-     * @return this
+     * @return verifier
      */
     public ToStringVerifier withIgnoredFields(final String... fields)
     {
@@ -221,7 +223,7 @@ public final class ToStringVerifier
      * assert only certain fields are present, do not call this method, instead use {@link #withOnlyTheseFields(Collection)}.
      *
      * @param fields field names to exclude in test
-     * @return this
+     * @return verifier
      */
     public ToStringVerifier withIgnoredFields(final Collection<String> fields)
     {
@@ -232,10 +234,10 @@ public final class ToStringVerifier
     }
 
     /**
-     * If specified, this tester will only assert that field names matching this regex pattern are present in the (@link {@link Object#toString()} output.
+     * If specified, this tester will only assert that field names matching this regex pattern are present in the {@link Object#toString()} output.
      *
      * @param regex field name match regex
-     * @return this
+     * @return verifier
      */
     public ToStringVerifier withMatchingFields(final String regex)
     {
@@ -245,10 +247,26 @@ public final class ToStringVerifier
     }
 
     /**
-     * If specified, this tester will only assert that field matching this filter criteria are present in the (@link {@link Object#toString()} output.
+     * Define how the verifier should behave if the {@link Object#toString()} output contains a field that has been explicitly excluded by
+     * calling {@link #withIgnoredFields(String...)} or implicitly excluded by calling {@link #withOnlyTheseFields(String...)} or
+     * {@link #withMatchingFields(String)}. By default, the verifier will not test for the presence of the excluded fields and will not fail
+     * if they exist in the {@link Object#toString()} output when they should not. You can change this behavior by setting <code>failOnExcludedFields</code>
+     * to true.
+     *
+     * @param failOnExcludedFields fail if ignored fields are found in the {@link Object#toString()} output
+     * @return verifier
+     */
+    public ToStringVerifier withFailOnExcludedFields(final boolean failOnExcludedFields)
+    {
+        this.failOnExcludedFields = failOnExcludedFields;
+        return this;
+    }
+
+    /**
+     * If specified, this tester will only assert that field matching this filter criteria are present in the {@link Object#toString()} output.
      *
      * @param fields filter criteria
-     * @return this
+     * @return verifier
      */
     public ToStringVerifier withMatchingFields(final FieldFilter fields)
     {
@@ -263,7 +281,7 @@ public final class ToStringVerifier
      * @param type        The class of the prefabricated values
      * @param prefabValue An instance of {@code S}.
      * @param <S>         The class of the prefabricated values.
-     * @return this
+     * @return verifier
      */
     public <S> ToStringVerifier withPrefabValue(final Class<S> type, final S prefabValue)
     {
@@ -277,7 +295,7 @@ public final class ToStringVerifier
      * @param clazz     class
      * @param formatter formatter
      * @param <S>       value type
-     * @return this
+     * @return verifier
      */
     public <S> ToStringVerifier withFormatter(final Class<S> clazz, final Formatter<S> formatter)
     {
@@ -292,7 +310,7 @@ public final class ToStringVerifier
      * The value to expect on the toString output when a field value is null. This defaults to <code>null</code>
      *
      * @param nullValue null value
-     * @return this
+     * @return verifier
      */
     public ToStringVerifier withNullValue(final String nullValue)
     {
@@ -349,8 +367,7 @@ public final class ToStringVerifier
 
         final List<FieldValue> fieldValues = FieldsProvider.provide(clazz, inheritedFields)
                                                            .stream()
-                                                           .filter((field) -> fieldFilter == null || fieldFilter.matches(clazz, field))
-                                                           .map(field -> verifyField(subject, stringValue, field))
+                                                           .map(field -> verifyField(subject, stringValue, field, fieldFilter == null || fieldFilter.matches(clazz, field)))
                                                            .filter(Optional::isPresent)
                                                            .map(Optional::get)
                                                            .collect(Collectors.toList());
@@ -388,19 +405,25 @@ public final class ToStringVerifier
         return Optional.of(new HashCodeVerificationError(hashCode));
     }
 
-    private Optional<FieldValue> verifyField(final Object subject, final String stringValue, final Field field)
+    private Optional<FieldValue> verifyField(final Object subject, final String stringValue, final Field field, final boolean expected)
     {
         final List<String> values = getFieldValues(subject, field);
         final String valuePattern = values.stream().map(Pattern::quote).reduce((val1, val2) -> val1 + "(.{0,4}?)" + val2).orElse("");
         final String regex = String.format("(.*)%s(.{0,4}?)%s(.*)", Pattern.quote(field.getName()), valuePattern);
         final Pattern pattern = Pattern.compile(regex, Pattern.DOTALL);
+        final boolean found = pattern.matcher(stringValue).matches();
 
-        if (pattern.matcher(stringValue).matches())
+        // Fail if we expected to find this field but did not
+        // Fail if we did not expect to find this field and we did, and failOnExcludedFields is set to true
+        if ((expected && !found) || (!expected && found && failOnExcludedFields))
         {
-            return Optional.empty();
+            final FieldValue.ErrorType errorType = found ? ErrorType.UNEXPECTED : ErrorType.EXPECTED;
+            final String value = values.stream().reduce((val1, val2) -> val1 + ", " + val2).orElse("");
+            final FieldValue fieldValue = new FieldValue(field.getName(), value, errorType);
+            return Optional.of(fieldValue);
         }
 
-        return Optional.of(new FieldValue(field.getName(), values.stream().reduce((val1, val2) -> val1 + ", " + val2).orElse("")));
+        return Optional.empty();
     }
 
     private List<String> getFieldValues(final Object subject, final Field field)

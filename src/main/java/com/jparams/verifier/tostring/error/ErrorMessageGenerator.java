@@ -1,6 +1,7 @@
 package com.jparams.verifier.tostring.error;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public final class ErrorMessageGenerator
 {
@@ -28,20 +29,25 @@ public final class ErrorMessageGenerator
                                                                                  .append(MESSAGE_SPLITTER)
                                                                                  .append("To");
 
-        if (errors.size() == 1)
+        final List<String> messages = errors.stream()
+                                            .map(VerificationError::getMessages)
+                                            .flatMap(List::stream)
+                                            .collect(Collectors.toList());
+
+        if (messages.size() == 1)
         {
-            return builder.append(" ").append(errors.get(0).getMessage()).toString();
+            return builder.append(" ").append(messages.get(0)).toString();
         }
 
         builder.append(":\n");
 
-        for (int i = 0; i < errors.size(); i++)
+        for (int i = 0; i < messages.size(); i++)
         {
             builder.append(ERROR_PREFIX)
                    .append("- ")
-                   .append(errors.get(i).getMessage().replaceAll("\n", "\n" + ERROR_PREFIX));
+                   .append(messages.get(i).replaceAll("\n", "\n" + ERROR_PREFIX));
 
-            if (i < errors.size() - 1)
+            if (i < messages.size() - 1)
             {
                 builder.append("\n");
             }
