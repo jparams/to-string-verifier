@@ -1,5 +1,8 @@
 package com.jparams.verifier.tostring.error;
 
+import java.util.Collections;
+import java.util.List;
+
 public class ClassNameVerificationError implements VerificationError
 {
     private final String className;
@@ -10,8 +13,9 @@ public class ClassNameVerificationError implements VerificationError
     }
 
     @Override
-    public String getMessage()
+    public List<String> getMessages()
     {
-        return "start with class name: " + className;
+        final String message = "start with class name: " + className;
+        return Collections.singletonList(message);
     }
 }

@@ -18,6 +18,6 @@ public class ClassNameVerificationErrorTest
     @Test
     public void testGetMessage()
     {
-        assertThat(subject.getMessage()).isEqualTo("start with class name: ClassName1");
+        assertThat(subject.getMessages()).containsExactly("start with class name: ClassName1");
     }
 }

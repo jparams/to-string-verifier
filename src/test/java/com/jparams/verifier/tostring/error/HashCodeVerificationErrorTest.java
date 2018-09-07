@@ -18,6 +18,6 @@ public class HashCodeVerificationErrorTest
     @Test
     public void testGetMessage()
     {
-        assertThat(subject.getMessage()).isEqualTo("contain hash code: 462");
+        assertThat(subject.getMessages()).containsExactly("contain hash code: 462");
     }
 }

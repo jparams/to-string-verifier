@@ -1,5 +1,8 @@
 package com.jparams.verifier.tostring.error;
 
+import java.util.Collections;
+import java.util.List;
+
 public class HashCodeVerificationError implements VerificationError
 {
     private final int hashCode;
@@ -10,8 +13,9 @@ public class HashCodeVerificationError implements VerificationError
     }
 
     @Override
-    public String getMessage()
+    public List<String> getMessages()
     {
-        return "contain hash code: " + Integer.toHexString(hashCode);
+        final String message = "contain hash code: " + Integer.toHexString(hashCode);
+        return Collections.singletonList(message);
     }
 }

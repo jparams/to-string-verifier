@@ -1,9 +1,11 @@
 package com.jparams.verifier.tostring.error;
 
+import java.util.List;
+
 /**
  * Verification error
  */
 public interface VerificationError
 {
-    String getMessage();
+    List<String> getMessages();
 }

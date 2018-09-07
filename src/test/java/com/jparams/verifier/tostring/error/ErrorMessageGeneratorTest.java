@@ -3,6 +3,7 @@ package com.jparams.verifier.tostring.error;
 import java.util.Arrays;
 import java.util.Collections;
 
+import com.jparams.verifier.tostring.error.FieldValue.ErrorType;
 import com.jparams.verifier.tostring.pojo.Person;
 
 import org.junit.Test;
@@ -34,7 +35,7 @@ public class ErrorMessageGeneratorTest
                                                                                "some string",
                                                                                Arrays.asList(new ClassNameVerificationError(Person.class.getName()),
                                                                                              new HashCodeVerificationError(1234),
-                                                                                             new FieldValueVerificationError(Arrays.asList(new FieldValue("firstName", "Bob"), new FieldValue("lastName", "Smith")))));
+                                                                                             new FieldValueVerificationError(Arrays.asList(new FieldValue("firstName", "Bob", ErrorType.EXPECTED), new FieldValue("lastName", "Smith", ErrorType.EXPECTED)))));
 
         assertThat(errorMessage).isEqualTo("Failed verification:\n"
                                                + "com.jparams.verifier.tostring.pojo.Person\n"
