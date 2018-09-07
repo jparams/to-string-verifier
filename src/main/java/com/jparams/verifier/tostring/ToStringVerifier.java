@@ -250,7 +250,7 @@ public final class ToStringVerifier
      * Define how the verifier should behave if the {@link Object#toString()} output contains a field that has been explicitly excluded by
      * calling {@link #withIgnoredFields(String...)} or implicitly excluded by calling {@link #withOnlyTheseFields(String...)} or
      * {@link #withMatchingFields(String)}. By default, the verifier will not test for the presence of the excluded fields and will not fail
-     * if they exist in the {@link Object#toString()} output when they should not. You can change this behavior by setting <code>failOnExcludedFields</code>
+     * if they exist in the {@link Object#toString()} output when they should not. You can change this behaviour by setting <code>failOnExcludedFields</code>
      * to true.
      *
      * @param failOnExcludedFields fail if ignored fields are found in the {@link Object#toString()} output
