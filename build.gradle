@@ -15,7 +15,7 @@ apply plugin: 'maven'
 apply from: 'publish.gradle'
 
 group = 'com.jparams'
-version = '1.4.1'
+version = '1.4.2'
 
 sourceCompatibility = 1.8
 

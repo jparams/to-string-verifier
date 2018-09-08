@@ -192,7 +192,7 @@ public final class ToStringVerifier
     }
 
     /**
-     * If specified, this tester will only assert that the given fields are present in the (@link {@link Object#toString()} output. To
+     * If specified, this tester will only assert that the given fields are present in the {@link Object#toString()} output. To
      * assert all fields are present, do not call this method. To test for all fields excluding some, call {@link #withIgnoredFields(Collection)}.
      *
      * @param fields field names to include in test
@@ -207,7 +207,7 @@ public final class ToStringVerifier
     }
 
     /**
-     * If specified, this tester will assert that all but the excluded fields are present in the (@link {@link Object#toString()} output. To
+     * If specified, this tester will assert that all but the excluded fields are present in the {@link Object#toString()} output. To
      * assert only certain fields are present, do not call this method, instead use {@link #withOnlyTheseFields(Collection)}.
      *
      * @param fields field names to exclude in test
@@ -219,7 +219,7 @@ public final class ToStringVerifier
     }
 
     /**
-     * If specified, this tester will assert that all but the excluded fields are present in the (@link {@link Object#toString()} output. To
+     * If specified, this tester will assert that all but the excluded fields are present in the {@link Object#toString()} output. To
      * assert only certain fields are present, do not call this method, instead use {@link #withOnlyTheseFields(Collection)}.
      *
      * @param fields field names to exclude in test
