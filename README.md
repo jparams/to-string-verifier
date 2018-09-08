@@ -80,11 +80,11 @@ Here are all the Vendor presets available out of the box:
 - Eclipse default style
 - Guava's MoreObjects toStringHelper.
 - Apache's ToStringBuilder. Supported ToStringStyles include:
--- JSON_STYLE
--- NO_CLASS_NAME_STYLE
--- DEFAULT_STYLE
--- MULTI_LINE_STYLE
--- SHORT_PREFIX_STYLE
+  * JSON_STYLE
+  * NO_CLASS_NAME_STYLE
+  * DEFAULT_STYLE
+  * MULTI_LINE_STYLE
+  * SHORT_PREFIX_STYLE
 
 ## Compatibility
 This library is compatible with Java 8 and above.
