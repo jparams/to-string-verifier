@@ -2,6 +2,7 @@ package com.jparams.verifier.tostring;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -18,6 +19,11 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.jparams.object.builder.Build;
+import com.jparams.object.builder.BuildStrategy;
+import com.jparams.object.builder.Configuration;
+import com.jparams.object.builder.ObjectBuilder;
+import com.jparams.object.builder.type.Type;
 import com.jparams.verifier.tostring.error.ClassNameVerificationError;
 import com.jparams.verifier.tostring.error.ErrorMessageGenerator;
 import com.jparams.verifier.tostring.error.FieldValue;
@@ -41,7 +47,7 @@ public final class ToStringVerifier
     private static final int TEST_REPEAT_COUNT = 3;
     private static final Formatter<Object> DEFAULT_FORMATTER = String::valueOf;
 
-    private final SubjectBuilder builder;
+    private final Configuration configuration;
     private final List<Class<?>> classes;
     private final Map<Class<?>, Formatter<Object>> formatterMap = new HashMap<>();
     private NameStyle nameStyle = null;
@@ -53,8 +59,9 @@ public final class ToStringVerifier
 
     private ToStringVerifier(final Collection<Class<?>> classes)
     {
-        this.builder = new SubjectBuilder();
+        this.configuration = Configuration.defaultConfiguration().withDefaultBuildStrategy(BuildStrategy.AUTO).withFailOnError(false).withFailOnWarning(false);
         this.classes = classes.stream().filter(ToStringVerifier::isTestableClass).collect(Collectors.toList());
+        this.classes.forEach(clazz -> configuration.withBuildStrategy(Type.forClass(clazz).build(), BuildStrategy.FIELD_INJECTION));
 
         if (this.classes.isEmpty())
         {
@@ -247,6 +254,19 @@ public final class ToStringVerifier
     }
 
     /**
+     * If specified, this tester will only assert that field matching this filter criteria are present in the {@link Object#toString()} output.
+     *
+     * @param fields filter criteria
+     * @return verifier
+     */
+    public ToStringVerifier withMatchingFields(final FieldFilter fields)
+    {
+        assertNotNull(fields);
+        this.fieldFilter = fields;
+        return this;
+    }
+
+    /**
      * Define how the verifier should behave if the {@link Object#toString()} output contains a field that has been explicitly excluded by
      * calling {@link #withIgnoredFields(String...)} or implicitly excluded by calling {@link #withOnlyTheseFields(String...)} or
      * {@link #withMatchingFields(String)}. By default, the verifier will not test for the presence of the excluded fields and will not fail
@@ -263,19 +283,6 @@ public final class ToStringVerifier
     }
 
     /**
-     * If specified, this tester will only assert that field matching this filter criteria are present in the {@link Object#toString()} output.
-     *
-     * @param fields filter criteria
-     * @return verifier
-     */
-    public ToStringVerifier withMatchingFields(final FieldFilter fields)
-    {
-        assertNotNull(fields);
-        this.fieldFilter = fields;
-        return this;
-    }
-
-    /**
      * Adds prefabricated values for instance fields of classes that ToStringVerifier cannot instantiate by itself.
      *
      * @param type        The class of the prefabricated values
@@ -285,7 +292,7 @@ public final class ToStringVerifier
      */
     public <S> ToStringVerifier withPrefabValue(final Class<S> type, final S prefabValue)
     {
-        this.builder.setPrefabValue(type, prefabValue);
+        this.configuration.withPrefabValue(Type.forClass(type).build(), prefabValue);
         return this;
     }
 
@@ -345,7 +352,14 @@ public final class ToStringVerifier
 
     private Optional<String> verify(final Class<?> clazz)
     {
-        final Object subject = builder.build(clazz);
+        final Build<?> build = ObjectBuilder.withConfiguration(configuration).buildInstanceOf(clazz);
+        final Object subject = build.get();
+
+        if (subject == null)
+        {
+            throw new AssertionError("Failed to create instance of " + clazz + ". Failed with error:\n" + build.getErrors());
+        }
+
         final String stringValue = subject.toString();
 
         if (stringValue == null)
@@ -442,6 +456,11 @@ public final class ToStringVerifier
         if (value == null)
         {
             return Collections.singletonList(nullValue);
+        }
+
+        if (Proxy.isProxyClass(value.getClass()))
+        {
+            return Collections.singletonList(value.toString());
         }
 
         if (value.getClass().isArray())
