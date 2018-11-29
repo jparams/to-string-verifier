@@ -61,7 +61,7 @@ public final class ToStringVerifier
     {
         this.configuration = Configuration.defaultConfiguration().withDefaultBuildStrategy(BuildStrategy.AUTO).withFailOnError(false).withFailOnWarning(false);
         this.classes = classes.stream().filter(ToStringVerifier::isTestableClass).collect(Collectors.toList());
-        this.classes.forEach(clazz -> configuration.withBuildStrategy(Type.forClass(clazz).build(), BuildStrategy.FIELD_INJECTION));
+        this.classes.forEach(clazz -> configuration.withBuildStrategy(Type.forClass(clazz), BuildStrategy.FIELD_INJECTION));
 
         if (this.classes.isEmpty())
         {
@@ -292,7 +292,7 @@ public final class ToStringVerifier
      */
     public <S> ToStringVerifier withPrefabValue(final Class<S> type, final S prefabValue)
     {
-        this.configuration.withPrefabValue(Type.forClass(type).build(), prefabValue);
+        this.configuration.withPrefabValue(Type.forClass(type), prefabValue);
         return this;
     }
 
