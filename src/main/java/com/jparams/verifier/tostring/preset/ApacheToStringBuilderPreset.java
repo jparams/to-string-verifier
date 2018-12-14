@@ -1,6 +1,7 @@
 package com.jparams.verifier.tostring.preset;
 
 import com.jparams.verifier.tostring.NameStyle;
+import com.jparams.verifier.tostring.SystemIdentityHashCodeProvider;
 import com.jparams.verifier.tostring.ToStringVerifier;
 
 /**
@@ -26,7 +27,7 @@ public class ApacheToStringBuilderPreset implements Preset
                 break;
             case DEFAULT_STYLE:
             case MULTI_LINE_STYLE:
-                verifier.withClassName(NameStyle.NAME).withHashCode(true);
+                verifier.withClassName(NameStyle.NAME).withHashCode(true).withHashCodeProvider(new SystemIdentityHashCodeProvider());
                 break;
             case SHORT_PREFIX_STYLE:
                 verifier.withClassName(NameStyle.SIMPLE_NAME).withHashCode(false);

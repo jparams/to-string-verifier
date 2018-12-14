@@ -9,3 +9,4 @@ target/
 *.iml
 *rebel.xml
 src/generated/
+key.gpg
