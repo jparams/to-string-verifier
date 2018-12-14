@@ -56,6 +56,7 @@ public final class ToStringVerifier
     private boolean hashCode = false;
     private String nullValue = "null";
     private boolean failOnExcludedFields = false;
+    private HashCodeProvider hashCodeProvider = new SystemIdentityHashCodeProvider();
 
     private ToStringVerifier(final Collection<Class<?>> classes)
     {
@@ -327,6 +328,19 @@ public final class ToStringVerifier
     }
 
     /**
+     * With hash code provider
+     *
+     * @param hashCodeProvider hash code provider
+     * @return verifier
+     */
+    public ToStringVerifier withHashCodeProvider(final HashCodeProvider hashCodeProvider)
+    {
+        assertNotNull(hashCodeProvider);
+        this.hashCodeProvider = hashCodeProvider;
+        return this;
+    }
+
+    /**
      * Perform verification
      *
      * @throws AssertionError if assertion conditions are not met
@@ -376,7 +390,7 @@ public final class ToStringVerifier
 
         if (hashCode)
         {
-            verifyHashCode(stringValue, subject.hashCode()).ifPresent(verificationErrors::add);
+            verifyHashCode(stringValue, hashCodeProvider.provide(subject)).ifPresent(verificationErrors::add);
         }
 
         final List<FieldValue> fieldValues = FieldsProvider.provide(clazz, inheritedFields)

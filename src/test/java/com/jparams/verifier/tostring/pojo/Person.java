@@ -3,6 +3,7 @@ package com.jparams.verifier.tostring.pojo;
 public class Person extends Identified
 {
     private static String stringValue = null;
+    private static Person testInstance = null;
 
     private final String firstName;
     private final String lastName;
@@ -27,6 +28,8 @@ public class Person extends Identified
     @Override
     public String toString()
     {
+        testInstance = this;
+
         if (stringValue != null)
         {
             return stringValue;
@@ -53,5 +56,10 @@ public class Person extends Identified
     public static String getStringValue()
     {
         return stringValue;
+    }
+
+    public static Person getTestInstance()
+    {
+        return testInstance;
     }
 }

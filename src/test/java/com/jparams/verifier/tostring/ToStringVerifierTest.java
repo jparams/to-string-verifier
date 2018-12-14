@@ -37,7 +37,7 @@ public class ToStringVerifierTest
         lock.lock(); // to force only one test to run at a time
 
         Person.setStringValue(null);
-        subject = ToStringVerifier.forClass(Person.class);
+        subject = ToStringVerifier.forClass(Person.class).withHashCodeProvider(new ObjectHashCodeProvider());
     }
 
     @After
@@ -369,6 +369,7 @@ public class ToStringVerifierTest
             ToStringVerifier.forClasses(Person.class, Identified.class)
                             .withMatchingFields((subject, field) -> false)
                             .withHashCode(true)
+                            .withHashCodeProvider(new ObjectHashCodeProvider())
                             .verify();
 
             TestCase.fail("Exception expected");
@@ -391,6 +392,7 @@ public class ToStringVerifierTest
             ToStringVerifier.forPackage("com.jparams.verifier.tostring.pojo", false)
                             .withMatchingFields((subject, field) -> false)
                             .withHashCode(true)
+                            .withHashCodeProvider(new ObjectHashCodeProvider())
                             .verify();
 
             TestCase.fail("Exception expected");
