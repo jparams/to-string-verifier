@@ -2,7 +2,6 @@ package com.jparams.verifier.tostring;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -478,9 +477,8 @@ public final class ToStringVerifier
 
     private Optional<FieldValue> verifyField(final Object subject, final String stringValue, final Field field, final boolean expected)
     {
-        final List<String> values = getFieldValues(subject, field);
-        final String valuePattern = values.stream().map(Pattern::quote).reduce((val1, val2) -> val1 + "(.{0,4}?)" + val2).orElse("");
-        final String regex = String.format("(.*)%s(.{0,4}?)%s(.*)", Pattern.quote(field.getName()), valuePattern);
+        final String value = getFieldValue(subject, field);
+        final String regex = String.format("(.*)%s(.{0,4}?)%s(.*)", Pattern.quote(field.getName()), Pattern.quote(value));
         final Pattern pattern = Pattern.compile(regex, Pattern.DOTALL);
         final boolean found = pattern.matcher(stringValue).matches();
 
@@ -489,7 +487,6 @@ public final class ToStringVerifier
         if ((expected && !found) || (!expected && found && failOnExcludedFields))
         {
             final FieldValue.ErrorType errorType = found ? ErrorType.UNEXPECTED : ErrorType.EXPECTED;
-            final String value = values.stream().reduce((val1, val2) -> val1 + ", " + val2).orElse("");
             final FieldValue fieldValue = new FieldValue(field.getName(), value, errorType);
             return Optional.of(fieldValue);
         }
@@ -497,7 +494,7 @@ public final class ToStringVerifier
         return Optional.empty();
     }
 
-    private List<String> getFieldValues(final Object subject, final Field field)
+    private String getFieldValue(final Object subject, final Field field)
     {
         final Object value;
 
@@ -512,37 +509,22 @@ public final class ToStringVerifier
 
         if (value == null)
         {
-            return Collections.singletonList(nullValue);
+            return nullValue;
         }
 
-        if (Proxy.isProxyClass(value.getClass()))
+        if (formatterMap.containsKey(value.getClass()))
         {
-            return Collections.singletonList(value.toString());
+            return formatterMap.get(value.getClass()).format(value);
         }
 
         if (value.getClass().isArray())
         {
-            return Stream.of((Object[]) value).map(this::formatValue).collect(Collectors.toList());
+            return Stream.of((Object[]) value)
+                         .map(val -> val == null ? nullValue : val.toString())
+                         .collect(Collectors.joining(", "));
         }
 
-        if (value instanceof Collection)
-        {
-            return ((Collection<?>) value).stream()
-                                          .map(this::formatValue)
-                                          .collect(Collectors.toList());
-        }
-
-        if (value instanceof Map)
-        {
-            return ((Map<?, ?>) value).entrySet()
-                                      .stream()
-                                      .map(entry -> String.format("%s=%s", formatValue(entry.getKey()), formatValue(entry.getValue())))
-                                      .collect(Collectors.toList());
-        }
-
-        return Stream.of(value)
-                     .map(this::formatValue)
-                     .collect(Collectors.toList());
+        return value.toString();
     }
 
     private String formatValue(final Object value)
