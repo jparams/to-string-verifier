@@ -527,11 +527,6 @@ public final class ToStringVerifier
         return value.toString();
     }
 
-    private String formatValue(final Object value)
-    {
-        return value == null ? nullValue : formatterMap.getOrDefault(value.getClass(), DEFAULT_FORMATTER).format(value);
-    }
-
     private void checkFieldPredicate()
     {
         if (fieldFilter != null)
