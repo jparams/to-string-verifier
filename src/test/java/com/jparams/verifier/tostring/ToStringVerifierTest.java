@@ -6,6 +6,9 @@ import java.util.Collections;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.jparams.object.builder.Context;
+import com.jparams.object.builder.provider.Provider;
+import com.jparams.object.builder.type.Type;
 import com.jparams.verifier.tostring.error.ClassNameVerificationError;
 import com.jparams.verifier.tostring.error.ErrorMessageGenerator;
 import com.jparams.verifier.tostring.error.FieldValue;
@@ -185,6 +188,54 @@ public class ToStringVerifierTest
         subject.withPrefabValue(Integer.class, 1)
                .withPrefabValue(String.class, "A")
                .verify();
+    }
+
+    @Test
+    public void testWithValueProviderFunction()
+    {
+        Person.setStringValue("Person{id=1, firstName='A', lastName='A'}");
+
+        subject.withValueProvider(Integer.class, path -> 1)
+               .withValueProvider(String.class, path -> "A")
+               .verify();
+    }
+
+    @Test
+    public void testWithValueProvider()
+    {
+        Person.setStringValue("Person{id=1, firstName='A', lastName='A'}");
+
+        subject.withValueProvider(new Provider()
+        {
+            @Override
+            public boolean supports(final Type<?> type)
+            {
+                return Integer.class.equals(type.getJavaType());
+            }
+
+            @Override
+            public Object provide(final Context context)
+            {
+                return 1;
+            }
+        });
+
+        subject.withValueProvider(new Provider()
+        {
+            @Override
+            public boolean supports(final Type<?> type)
+            {
+                return String.class.equals(type.getJavaType());
+            }
+
+            @Override
+            public Object provide(final Context context)
+            {
+                return "A";
+            }
+        });
+
+        subject.verify();
     }
 
     @Test(expected = IllegalArgumentException.class)

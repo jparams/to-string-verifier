@@ -24,7 +24,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.jparams:object-builder:2.1.1'
+    compile 'com.jparams:object-builder:2.2.1'
     testCompile 'junit:junit:4.12'
     testCompile 'org.assertj:assertj-core:3.11.1'
     testCompile 'eu.codearte.catch-exception:catch-exception:1.4.4'

@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -22,7 +23,10 @@ import java.util.stream.Stream;
 import com.jparams.object.builder.Build;
 import com.jparams.object.builder.BuildStrategy;
 import com.jparams.object.builder.Configuration;
+import com.jparams.object.builder.Context;
 import com.jparams.object.builder.ObjectBuilder;
+import com.jparams.object.builder.path.Path;
+import com.jparams.object.builder.provider.Provider;
 import com.jparams.object.builder.type.Type;
 import com.jparams.verifier.tostring.error.ClassNameVerificationError;
 import com.jparams.verifier.tostring.error.ErrorMessageGenerator;
@@ -286,14 +290,53 @@ public final class ToStringVerifier
     /**
      * Adds prefabricated values for instance fields of classes that ToStringVerifier cannot instantiate by itself.
      *
-     * @param type        The class of the prefabricated values
+     * @param clazz       The class of the prefabricated values
      * @param prefabValue An instance of {@code S}.
      * @param <S>         The class of the prefabricated values.
      * @return verifier
      */
-    public <S> ToStringVerifier withPrefabValue(final Class<S> type, final S prefabValue)
+    public <S> ToStringVerifier withPrefabValue(final Class<S> clazz, final S prefabValue)
     {
-        this.configuration.withPrefabValue(Type.forClass(type), prefabValue);
+        this.configuration.withPrefabValue(Type.forClass(clazz), prefabValue);
+        return this;
+    }
+
+    /**
+     * Adds value provider values for instance fields of classes that ToStringVerifier cannot instantiate by itself.
+     *
+     * @param clazz         The class of the value to being supplied
+     * @param valueSupplier value supplier
+     * @param <S>           The class of the prefabricated values.
+     * @return verifier
+     */
+    public <S> ToStringVerifier withValueProvider(final Class<S> clazz, final Function<Path, S> valueSupplier)
+    {
+        this.configuration.withProvider(new Provider()
+        {
+            @Override
+            public boolean supports(final Type<?> type)
+            {
+                return type.getJavaType().equals(clazz);
+            }
+
+            @Override
+            public Object provide(final Context context)
+            {
+                return valueSupplier.apply(context.getPath());
+            }
+        });
+        return this;
+    }
+
+    /**
+     * Adds value provider values for instance fields of classes that ToStringVerifier cannot instantiate by itself.
+     *
+     * @param provider Value provider
+     * @return verifier
+     */
+    public ToStringVerifier withValueProvider(final Provider provider)
+    {
+        this.configuration.withProvider(provider);
         return this;
     }
 
