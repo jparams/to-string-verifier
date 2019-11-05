@@ -1,6 +1,6 @@
 language: java
 jdk:
-  - oraclejdk8
+  - openjdk8
 script:
   - 'if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then travis_wait 40 gradle clean build; fi'
   - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then travis_wait 40 gradle clean build uploadArchives -PnexusUsername=$NEXUS_USERNAME -PnexusPassword=$NEXUS_PASSWORD -Psigning.keyId=$SIGNING_KEY -Psigning.password=$SIGNING_PASSWORD -Psigning.secretKeyRingFile=key.gpg; fi'
