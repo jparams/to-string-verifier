@@ -29,5 +29,5 @@ dependencies {
     testCompile 'org.assertj:assertj-core:3.11.1'
     testCompile 'eu.codearte.catch-exception:catch-exception:1.4.4'
     testCompile 'org.apache.commons:commons-lang3:3.8'
-    testCompile 'com.google.guava:guava:26.0-jre'
+    testCompile 'com.google.guava:guava:28.1-jre'
 }
