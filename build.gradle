@@ -28,6 +28,6 @@ dependencies {
     testCompile 'junit:junit:4.12'
     testCompile 'org.assertj:assertj-core:3.14.0'
     testCompile 'eu.codearte.catch-exception:catch-exception:1.4.4'
-    testCompile 'org.apache.commons:commons-lang3:3.8'
+    testCompile 'org.apache.commons:commons-lang3:3.9'
     testCompile 'com.google.guava:guava:28.1-jre'
 }
