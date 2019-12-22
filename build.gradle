@@ -24,10 +24,10 @@ repositories {
 }
 
 dependencies {
-    compile 'com.jparams:object-builder:2.2.1'
-    testCompile 'junit:junit:4.12'
-    testCompile 'org.assertj:assertj-core:3.14.0'
-    testCompile 'eu.codearte.catch-exception:catch-exception:2.0'
-    testCompile 'org.apache.commons:commons-lang3:3.9'
-    testCompile 'com.google.guava:guava:28.1-jre'
+    implementation 'com.jparams:object-builder:2.2.1'
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.assertj:assertj-core:3.14.0'
+    testImplementation 'eu.codearte.catch-exception:catch-exception:2.0'
+    testImplementation 'org.apache.commons:commons-lang3:3.9'
+    testImplementation 'com.google.guava:guava:28.1-jre'
 }

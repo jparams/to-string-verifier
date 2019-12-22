@@ -18,7 +18,7 @@ Maven:
 
 Gradle:
 ```groovy
-testCompile 'com.jparams:to-string-verifier:1.x.x'
+testImplementation 'com.jparams:to-string-verifier:1.x.x'
 ```
 
 ### What is To String Verifier?
