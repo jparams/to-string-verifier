@@ -28,6 +28,6 @@ dependencies {
     testImplementation 'junit:junit:4.13'
     testImplementation 'org.assertj:assertj-core:3.14.0'
     testImplementation 'eu.codearte.catch-exception:catch-exception:2.0'
-    testImplementation 'org.apache.commons:commons-lang3:3.9'
+    testImplementation 'org.apache.commons:commons-lang3:3.10'
     testImplementation 'com.google.guava:guava:28.2-jre'
 }
