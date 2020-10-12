@@ -25,7 +25,7 @@ repositories {
 
 dependencies {
     implementation 'com.jparams:object-builder:2.3.1'
-    testImplementation 'junit:junit:4.13'
+    testImplementation 'junit:junit:4.13.1'
     testImplementation 'org.assertj:assertj-core:3.14.0'
     testImplementation 'eu.codearte.catch-exception:catch-exception:2.0'
     testImplementation 'org.apache.commons:commons-lang3:3.9'
