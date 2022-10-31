@@ -2,6 +2,7 @@ package com.jparams.verifier.tostring;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,7 +45,7 @@ final class PackageScanner
 
         while (resources.hasMoreElements())
         {
-            final File directory = new File(resources.nextElement().getFile());
+            final File directory = new File(getResourcePath(resources.nextElement()));
             rootDirectories.add(directory);
         }
 
@@ -52,6 +53,16 @@ final class PackageScanner
                               .map(rootDirectory -> findClasses(rootDirectory, packageName, recursively))
                               .flatMap(List::stream)
                               .collect(Collectors.toList());
+    }
+
+    private static String getResourcePath(URL r) {
+        try
+        {
+            return r.toURI().getPath();
+        } catch (URISyntaxException e)
+        {
+            throw new PackageScanException(e);
+        }
     }
 
     private static List<Class<?>> findClasses(final File rootDirectory, final String packageName, final boolean recursively)
